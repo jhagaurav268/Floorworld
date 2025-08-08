@@ -1,0 +1,93 @@
+.container {
+    padding: 1rem;
+}
+
+.discountContainer {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: flex-end;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.slds-table {
+    width: 100%;
+    min-width: 1200px;
+}
+
+.wide-column {
+    min-width: 100px;
+}
+
+.wrap-text {
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.action-buttons-row {
+    background-color: #f3f3f3;
+}
+
+.action-buttons-cell {
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.action-button {
+    margin: 0.25rem;
+}
+
+.action-button.add {
+    --sds-c-button-brand-color-background: #1589ee;
+}
+
+.action-button.cancel {
+    --sds-c-button-color-background: #c23934;
+    --sds-c-button-text-color: white;
+}
+
+.customClass {
+    cursor: pointer;
+    padding: 0.25rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.customClass:hover {
+    background-color: #f3f3f3;
+}
+
+.slds-box {
+    position: absolute;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #d8dde6;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .discountContainer {
+        flex-direction: column;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .wide-column {
+        min-width: 80px;
+    }
+}

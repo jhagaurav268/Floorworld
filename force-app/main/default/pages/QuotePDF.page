@@ -1,0 +1,83 @@
+<!-- QuotePDFPage.page -->
+<apex:page standardController="Quote" renderAs="pdf" applyBodyTag="false">
+    <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                .quote-info { margin: 20px 0; }
+                .line-items { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                .line-items th, .line-items td { border: 1px solid #ddd; padding: 8px; }
+                .line-items th { background-color: #f2f2f2; }
+                .terms { margin-top: 30px; }
+                .signature-area { 
+                position: absolute; 
+                bottom: 50px; 
+                width: 100%; 
+                text-align: center;
+                border-top: 1px solid #000;
+                padding-top: 10px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>QUOTE</h1>
+                <p>Quote Number: {!Quote.QuoteNumber}</p>
+                <p>Date: {!TODAY()}</p>
+            </div>
+            
+            <div class="quote-info">
+                <p><strong>Account:</strong> {!Quote.Opportunity.Account.Name}</p>
+                <p><strong>Contact:</strong> {!Quote.Contact.Name}</p>
+                <p><strong>Valid Until:</strong> {!Quote.ExpirationDate}</p>
+            </div>
+            
+            <table class="line-items">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <apex:repeat value="{!Quote.QuoteLineItems}" var="line">
+                        <tr>
+                            <td>{!line.Product2.Name}</td>
+                            <td>{!line.Quantity}</td>
+                            <td><apex:outputText value="{0, number, currency}">
+                                <apex:param value="{!line.UnitPrice}" />
+                                </apex:outputText></td>
+                            <td><apex:outputText value="{0, number, currency}">
+                                <apex:param value="{!line.TotalPrice}" />
+                                </apex:outputText></td>
+                        </tr>
+                    </apex:repeat>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" align="right"><strong>Grand Total:</strong></td>
+                        <td><apex:outputText value="{0, number, currency}">
+                            <apex:param value="{!Quote.TotalPrice}" />
+                            </apex:outputText></td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <div class="terms">
+                <h3>Terms and Conditions</h3>
+                <p>All prices are valid for 30 days from the quote date.</p>
+                <p>Payment terms: Net 30 days from invoice date.</p>
+                <p>Delivery: Within 2 weeks of order confirmation.</p>
+            </div>
+            
+            <!-- This space is reserved for Zoho Sign signature placement -->
+            <div class="signature-area">
+                <p>Signature: _________________________________________</p>
+                <p>Date: ________________________</p>
+            </div>
+        </body>
+    </html>
+</apex:page>

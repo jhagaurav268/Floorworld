@@ -1,0 +1,21 @@
+<template>
+    <template if:true={showComponent}>
+        <lightning-card title="Customer Feedback" icon-name="utility:feedback">
+            <div class="slds-m-around_medium">
+                <lightning-combobox label="How would you rate our service?" value={rating} options={ratingOptions}
+                    onchange={handleRatingChange}>
+                </lightning-combobox>
+
+                <lightning-textarea label="Comments" value={comment} onchange={handleCommentChange}>
+                </lightning-textarea></br>
+
+                <lightning-button variant="brand" label="Submit Feedback" onclick={submitFeedback}
+                    class="slds-m-top_medium">
+                </lightning-button>
+            </div>
+        </lightning-card>
+    </template>
+    <template if:false={showComponent}>
+        <h2 class="slds-text-heading_medium">{componentMessage}</h2>
+    </template>
+</template>
