@@ -2,209 +2,70 @@ import { LightningElement, track, api } from 'lwc';
 import searchProductItems from '@salesforce/apex/QuoteController.searchProductItems';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import upsertQuoteLineItems from '@salesforce/apex/QuoteController.upsertQuoteLineItems';
-import getPendingApprovalStatus from '@salesforce/apex/QuoteController.getPendingApprovalStatus';
 import getExistingQuoteLineItems from '@salesforce/apex/QuoteController.getExistingQuoteLineItems';
 
+const PRODUCT_FAMILIES = {
+    WALL_TO_WALL: ['Wall to Wall', 'Sheet Vinyl', 'Grass'],
+    DECKING: ['Decking', 'Wood Flooring', 'LVT']
+};
+
+const TAX_RATE = 0.05;
+const DISCOUNT_FAMILY = 'Discount';
+
 export default class FloorWorldCarpetSolution extends LightningElement {
-    @track tableData = [
-        {
-            id: 1,
-            location: '',
-            itemInput: '',
-            description: '',
-            netArea: '',
-            wastage: '',
-            length: '',
-            widthM: '',
-            totalArea: '',
-            quantity: '',
-            quantitySqm: '',
-            units: '',
-            rate: '',
-            unitPriceSub: '',
-            amount: '',
-            taxAmount: '',
-            grossAmount: '',
-            estExtendedCost: '',
-            costEstimateType: '',
-            estimateType: '',
-            isSuggestionsVisible: false,
-            editmode: true,
-            readmode: false,
-            family: '',
-            selectedItemId: '',
-            averageCost: '',
-            costPricePerUnit: '',
-            costPrice: '',
-            netAreaDisable: true,
-            wastageDisable: true,
-            lengthDisable: true
-        }
-    ];
-    copyOfSelectedRow;
-    rowId = 2;
-    isProductSelected = false;
     @api recordId;
+
+    @track tableData = [];
     @track selectedDiscount = '';
     @track rate = '';
+    @track filteredProducts = [];
+    @track selectedRowIndex = -1;
+
+    rowId = 1;
+    copyOfSelectedRow = null;
     isLoading = false;
+    searchTimeout = null;
 
-    discountOptions = [
-        { label: 'None', value: '' },
-        { label: 'Discount 5%', value: '5' },
-        { label: 'Discount 10%', value: '10' },
-        { label: 'Discount 15%', value: '15' },
-        { label: 'Discount 25%', value: '25' },
-    ];
-
-    handleDiscountChange(event) {
-        this.selectedDiscount = event.detail.value;
-        this.rate = this.selectedDiscount;
-
-        if (this.selectedDiscount && this.selectedDiscount !== '') {
-            this.addDiscountRow(parseFloat(this.selectedDiscount));
-        }
-    }
-
-    handleRateChange(event) {
-        this.rate = event.target.value;
-
-        if (this.rate && this.rate !== '') {
-            this.addDiscountRow(parseFloat(this.rate));
-        }
-    }
-
-    addDiscountRow(discountRate) {
-        // Calculate total gross amount from all existing rows (excluding discount rows)
-        let totalGrossAmount = 0;
-        this.tableData.forEach(row => {
-            if (row.family !== 'Discount' && row.grossAmount) {
-                totalGrossAmount += parseFloat(row.grossAmount);
-            }
-        });
-
-        if (totalGrossAmount <= 0) {
-            this.showToast('Warning', 'No items available to apply discount. Please add items first.', 'warning', 'dismissable');
-            return;
-        }
-
-        // Remove existing discount row if any
-        this.tableData = this.tableData.filter(row => row.family !== 'Discount');
-
-        // Calculate discount amount
-        const discountAmount = totalGrossAmount * (discountRate / 100);
-
-        // Create discount row
-        const discountRow = {
-            id: this.rowId++,
-            salesforceId: null,
-            location: 'Discount',
-            itemInput: `Discount (${discountRate}%)`,
-            description: `${discountRate}% discount on total amount`,
-            netArea: '',
-            wastage: '',
-            length: '',
-            widthM: '',
-            totalArea: '',
-            quantity: 1,
-            quantitySqm: '',
-            units: '',
-            rate: -discountAmount.toFixed(2), // Negative for discount
-            unitPriceSub: -discountAmount.toFixed(2),
-            amount: -discountAmount.toFixed(2),
-            taxAmount: (-discountAmount * 0.05).toFixed(2), // 5% tax on discount
-            grossAmount: (-discountAmount * 1.05).toFixed(2), // Amount + tax
-            estExtendedCost: '',
-            costEstimateType: 'Discount',
-            estimateType: 'Discount',
-            isSuggestionsVisible: false,
-            editmode: false,
-            readmode: true,
-            family: 'Discount',
-            selectedItemId: '',
-            averageCost: '',
-            costPricePerUnit: '',
-            costPrice: '',
-            netAreaDisable: true,
-            lengthDisable: true,
-            isSelected: false
-        };
-        this.tableData.push(discountRow);
-
-        this.tableData = [...this.tableData];
-
-        this.showToast('Success', `${discountRate}% discount applied successfully!`, 'success', 'dismissable');
-    }
-
-    handleRateChange(event) {
-        this.rate = event.target.value;
+    get discountOptions() {
+        return [
+            { label: 'None', value: '' },
+            { label: 'Discount 5%', value: '5' },
+            { label: 'Discount 10%', value: '10' },
+            { label: 'Discount 15%', value: '15' },
+            { label: 'Discount 25%', value: '25' },
+        ];
     }
 
     connectedCallback() {
-        this.isLoading = true;
-        this.loadExistingQuoteLineItems();
+        this.initializeComponent();
     }
 
-    loadExistingQuoteLineItems() {
-        getExistingQuoteLineItems({ quoteId: this.recordId })
-            .then(data => {
-                const existingRows = data.map(item => ({
-                    id: this.rowId++,
-                    salesforceId: item.salesforceId,
-                    location: item.location,
-                    itemInput: item.productName,
-                    description: item.productDescription,
-                    netArea: item.netArea?.toString() || '',
-                    wastage: item.wastage?.toString() || '',
-                    length: item.length?.toString() || '',
-                    widthM: item.width?.toString() || '',
-                    totalArea: item.totalArea?.toString() || '',
-                    quantity: item.quantity?.toString() || '',
-                    quantitySqm: item.quantityArea?.toString() || '',
-                    units: item.units || '',
-                    rate: item.rate?.toString() || '',
-                    unitPriceSub: item.unitPrice?.toString() || '',
-                    amount: item.amount?.toString() || '',
-                    taxAmount: item.taxAmount?.toString() || '',
-                    grossAmount: item.grossAmount?.toString() || '',
-                    estExtendedCost: item.estExtendedCost?.toString() || '',
-                    costEstimateType: 'Custom',
-                    estimateType: item.estimateType || '',
-                    family: item.family || '',
-                    selectedItemId: item.productId,
-                    averageCost: item.averageCost?.toString() || '',
-                    costPricePerUnit: item.costPricePerUnit?.toString() || '',
-                    costPrice: item.costPrice?.toString() || '',
-                    isSuggestionsVisible: false,
-                    netAreaDisable: (item.productFamily === 'Wall to Wall' || item.productFamily === 'Sheet Vinyl ' || item.productFamily === 'Grass') ? true : false,
-                    lengthDisable: (item.productFamily === 'Decking' || item.productFamily === 'Wood Flooring ' || item.productFamily === 'LVT') ? true : false,
-                    editmode: false,
-                    readmode: true
-                }));
-                this.tableData = [
-                    ...existingRows,
-                    // this.createNewRow()
-                ];
-                console.log('this.tableData ', JSON.stringify(this.tableData));
-                console.log('this.tableData length ', this.tableData.length);
+    async initializeComponent() {
+        this.isLoading = true;
+        try {
+            await this.loadExistingQuoteLineItems();
+        } catch (error) {
+            this.showToast('Error', 'Failed to load existing items', 'error');
+        } finally {
+            this.isLoading = false;
+        }
+    }
 
-                if (this.tableData.length === 0) {
-                    this.tableData = [
-                        this.createNewRow()
-                    ];
-                }
-                this.isLoading = false;
+    async loadExistingQuoteLineItems() {
+        try {
+            const data = await getExistingQuoteLineItems({ quoteId: this.recordId });
+            const existingRows = data.map(item => this.mapItemToTableRow(item));
 
-            })
-            .catch(error => {
-                this.isLoading = false;
-                this.showToast('Error', error.body.message, 'error', 'dismissable');
-            });
+            this.tableData = existingRows.length > 0 ? existingRows : [this.createNewRow()];
+        } catch (error) {
+            this.showToast('Error', error.body?.message || 'Failed to load items', 'error');
+            this.tableData = [this.createNewRow()];
+        }
     }
 
     createNewRow() {
         return {
-            id: this.rowId++,
+            id: this.generateRowId(),
             salesforceId: null,
             location: '',
             itemInput: '',
@@ -225,479 +86,588 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             estExtendedCost: '',
             costEstimateType: '',
             estimateType: '',
-            isSuggestionsVisible: false,
-            editmode: true,
-            readmode: false,
             family: '',
             selectedItemId: '',
             averageCost: '',
             costPricePerUnit: '',
-            costPrice: ''
+            costPrice: '',
+            isSuggestionsVisible: false,
+            editmode: true,
+            readmode: false,
+            isSelected: false,
+            netAreaDisable: false,
+            wastageDisable: true,
+            lengthDisable: false
         };
     }
 
+    mapItemToTableRow(item) {
+        const isWallToWall = PRODUCT_FAMILIES.WALL_TO_WALL.includes(item.productFamily);
+        const isDecking = PRODUCT_FAMILIES.DECKING.includes(item.productFamily);
 
-    calculateTotalArea(netArea, wastage) {
-        if (!netArea) return 0;
-        const wastageAmount = parseFloat(netArea) * (parseFloat(wastage || 0) / 100);
-        return parseFloat(netArea) + wastageAmount;
+        return {
+            id: this.generateRowId(),
+            salesforceId: item.salesforceId,
+            location: item.location || '',
+            itemInput: item.productName || '',
+            description: item.productDescription || '',
+            netArea: this.safeToString(item.netArea),
+            wastage: this.safeToString(item.wastage),
+            length: this.safeToString(item.length),
+            widthM: this.safeToString(item.width),
+            totalArea: this.safeToString(item.totalArea),
+            quantity: this.safeToString(item.quantity),
+            quantitySqm: this.safeToString(item.quantityArea),
+            units: item.units || '',
+            rate: this.safeToString(item.rate),
+            unitPriceSub: this.safeToString(item.unitPrice),
+            amount: this.safeToString(item.amount),
+            taxAmount: this.safeToString(item.taxAmount),
+            grossAmount: this.safeToString(item.grossAmount),
+            estExtendedCost: this.safeToString(item.estExtendedCost),
+            costEstimateType: 'Custom',
+            estimateType: item.estimateType || '',
+            family: item.family || '',
+            selectedItemId: item.productId,
+            averageCost: this.safeToString(item.averageCost),
+            costPricePerUnit: this.safeToString(item.costPricePerUnit),
+            costPrice: this.safeToString(item.costPrice),
+            isSuggestionsVisible: false,
+            editmode: false,
+            readmode: true,
+            isSelected: false,
+            netAreaDisable: isWallToWall,
+            wastageDisable: true,
+            lengthDisable: isDecking
+        };
     }
 
-    calculateQuantity(totalArea, units) {
-        if (!totalArea || !units) return 0;
-        const unitValue = typeof units === 'string' ? parseFloat(units.split(' ')[0]) : parseFloat(units);
-        if (isNaN(unitValue) || unitValue === 0) return 0;
-        return Math.ceil(totalArea / unitValue);
+    generateRowId() {
+        return this.rowId++;
     }
 
-    calculateQuantitySqm(quantity, units) {
-        if (!quantity || !units) return 0;
-        const unitValue = typeof units === 'string' ? parseFloat(units.split(' ')[0]) : parseFloat(units);
-        return quantity * unitValue;
+    safeToString(value) {
+        return value?.toString() || '';
     }
 
-    calculateRate(unitPriceSub, units) {
-        if (!unitPriceSub || !units) return 0;
-        const unitValue = typeof units === 'string' ? parseFloat(units.split(' ')[0]) : parseFloat(units);
-        return unitPriceSub * unitValue;
+    safeParseFloat(value, defaultValue = 0) {
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? defaultValue : parsed;
     }
 
-    calculateAmount(quantitySqm, unitPriceSub) {
-        if (!quantitySqm || !unitPriceSub) return 0;
-        return quantitySqm * unitPriceSub;
+    handleDiscountChange(event) {
+        this.selectedDiscount = event.detail.value;
+        this.rate = this.selectedDiscount;
+        this.applyDiscount();
     }
 
-    calculateTaxAmount(amount, shippingCost = 0, shippingTaxRate = 0) {
-        const taxOnAmount = (parseFloat(amount) || 0) * 0.05;
-        const taxOnShipping = (parseFloat(shippingCost) || 0) * (parseFloat(shippingTaxRate) || 0) / 100;
-        return taxOnAmount + taxOnShipping;
+    handleRateChange(event) {
+        this.rate = event.target.value;
+        console.log('this.rate ', this.rate);
+        this.applyDiscount();
     }
 
-    calculateGrossAmount(amount, taxAmount) {
-        return (parseFloat(amount) || 0) + (parseFloat(taxAmount) || 0);
+    applyDiscount() {
+        if (this.rate && this.rate !== '') {
+            const discountRate = this.safeParseFloat(this.rate);
+            console.log('discountRate ', discountRate);
+
+            if (discountRate > 0) {
+                this.addDiscountRow(discountRate);
+            }
+        }
     }
 
-    calculateEstExtendedCost(averageCost, quantity) {
-        return (parseFloat(averageCost) || 0) * (parseFloat(quantity) || 0);
+    addDiscountRow(discountRate) {
+        const totalGrossAmount = (this.calculateTotalGrossAmount() * discountRate) / 100;
+        const totalRate = (this.calculateTotalRate() * discountRate) / 100;
+        const unitPriceSub = (this.calculateunitPriceSub() * discountRate) / 100;
+        const amount = (this.calculateAmount() * discountRate) / 100;
+        const taxAmount = (this.calculateTaxAmount() * discountRate) / 100;
+
+        if (totalGrossAmount <= 0) {
+            this.showToast('Warning', 'No items available to apply discount. Please add items first.', 'warning');
+            return;
+        }
+
+        this.tableData = this.tableData.filter(row => row.family !== DISCOUNT_FAMILY);
+
+        const discountRow = this.createDiscountRow(discountRate, totalGrossAmount, totalRate, unitPriceSub, amount, taxAmount);
+
+        this.tableData = [...this.tableData, discountRow];
+        this.showToast('Success', `${discountRate}% discount applied successfully!`, 'success');
+    }
+
+    createDiscountRow(discountRate, totalGrossAmount, totalRate, unitPriceSub, amount, taxAmount) {
+
+        return {
+            ...this.createNewRow(),
+            location: 'Discount',
+            itemInput: `Discount (${discountRate}%)`,
+            description: `${discountRate}% discount on total amount`,
+            quantity: 1,
+            rate: -totalRate.toFixed(2),
+            unitPriceSub: -unitPriceSub.toFixed(2),
+            amount: -amount.toFixed(2),
+            taxAmount: -taxAmount.toFixed(2),
+            grossAmount: -totalGrossAmount.toFixed(2),
+            costEstimateType: 'Discount',
+            estimateType: 'Discount',
+            family: DISCOUNT_FAMILY,
+            editmode: false,
+            readmode: true,
+            netAreaDisable: true,
+            lengthDisable: true
+        };
+    }
+
+    calculateTotalGrossAmount() {
+        return this.tableData
+            .filter(row => row.family !== DISCOUNT_FAMILY && row.grossAmount)
+            .reduce((total, row) => total + this.safeParseFloat(row.grossAmount), 0);
+    }
+
+    calculateTotalRate() {
+        return this.tableData
+            .filter(row => row.family !== DISCOUNT_FAMILY && row.rate)
+            .reduce((total, row) => total + this.safeParseFloat(row.rate), 0);
+    }
+
+    calculateunitPriceSub() {
+        return this.tableData
+            .filter(row => row.family !== DISCOUNT_FAMILY && row.unitPriceSub)
+            .reduce((total, row) => total + this.safeParseFloat(row.unitPriceSub), 0);
+    }
+
+    calculateAmount() {
+        return this.tableData
+            .filter(row => row.family !== DISCOUNT_FAMILY && row.amount)
+            .reduce((total, row) => total + this.safeParseFloat(row.amount), 0);
+    }
+
+    calculateTaxAmount() {
+        return this.tableData
+            .filter(row => row.family !== DISCOUNT_FAMILY && row.taxAmount)
+            .reduce((total, row) => total + this.safeParseFloat(row.taxAmount), 0);
+    }
+
+    recalculateDiscount() {
+        if (this.rate && this.rate !== '') {
+            this.addDiscountRow(this.safeParseFloat(this.rate));
+        }
+    }
+
+    handleInputChange(event) {
+        const { id: rowId, field } = event.target.dataset;
+        const value = event.target.value;
+
+        this.updateTableRow(parseInt(rowId), field, value);
+        this.scheduleDiscountRecalculation(field);
+    }
+
+    updateTableRow(rowId, field, value) {
+        this.tableData = this.tableData.map(row => {
+            if (row.id === rowId) {
+                const updatedRow = { ...row, [field]: value };
+                this.performCalculations(updatedRow, field);
+                this.updateFieldStates(updatedRow, field);
+                return updatedRow;
+            }
+            return row;
+        });
+    }
+
+    scheduleDiscountRecalculation(field) {
+        const fieldsToRecalculate = ['amount', 'grossAmount', 'quantity', 'rate', 'unitPriceSub'];
+        if (fieldsToRecalculate.includes(field)) {
+            setTimeout(() => this.recalculateDiscount(), 100);
+        }
+    }
+
+    updateFieldStates(row, field) {
+        if (field === 'quantity' && !row.units) {
+            row.units = 'SqM';
+        }
+
+        if (field !== 'length' && row.totalArea) {
+            row.wastageDisable = false;
+        } else if (!row.totalArea) {
+            row.wastageDisable = true;
+        }
     }
 
     performCalculations(row, changedField) {
-        if (changedField === 'netArea' || changedField === 'wastage') {
-            row.totalArea = this.calculateTotalArea(row.netArea, row.wastage);
+        const calculations = {
+            netArea: () => this.calculateAreaFromDimensions(row),
+            wastage: () => this.calculateAreaFromDimensions(row),
+            length: () => this.calculateAreaFromDimensions(row)
+        };
+
+        if (calculations[changedField]) {
+            calculations[changedField]();
         }
 
-        if (changedField === 'length' && row.widthM) {
-            row.netArea = parseFloat(row.length) * parseFloat(row.widthM);
-            row.totalArea = this.calculateTotalArea(row.netArea, row.wastage);
-        }
+        this.calculateQuantities(row);
+        this.calculatePricing(row);
+        this.calculateCosts(row);
+        this.formatNumbers(row);
+    }
 
+    calculateAreaFromDimensions(row) {
+        if (row.length && row.widthM) {
+            row.netArea = (this.safeParseFloat(row.length) * this.safeParseFloat(row.widthM)).toString();
+        }
+        row.totalArea = this.calculateTotalArea(row.netArea, row.wastage).toString();
+    }
+
+    calculateTotalArea(netArea, wastage) {
+        if (!netArea) return 0;
+        const net = this.safeParseFloat(netArea);
+        const waste = this.safeParseFloat(wastage);
+        return net + (net * waste / 100);
+    }
+
+    calculateQuantities(row) {
         if (row.totalArea && row.units) {
-            row.quantity = this.calculateQuantity(row.totalArea, row.units);
-            row.quantitySqm = this.calculateQuantitySqm(row.quantity, row.units);
-        }
+            const totalArea = this.safeParseFloat(row.totalArea);
+            const unitValue = this.extractUnitValue(row.units);
 
-        if (row.widthM && !row.units && row.totalArea) {
-            row.quantity = Math.ceil(parseFloat(row.totalArea) / parseFloat(row.widthM));
-            row.quantitySqm = row.quantity * parseFloat(row.widthM);
-        }
+            row.quantity = Math.ceil(totalArea / unitValue).toString();
+            row.quantitySqm = (this.safeParseFloat(row.quantity) * unitValue).toFixed(2);
+        } else if (row.widthM && !row.units && row.totalArea) {
+            const totalArea = this.safeParseFloat(row.totalArea);
+            const width = this.safeParseFloat(row.widthM);
 
-        if (row.unitPriceSub) {
+            row.quantity = Math.ceil(totalArea / width).toString();
+            row.quantitySqm = (this.safeParseFloat(row.quantity) * width).toFixed(2);
+        }
+    }
+
+    calculatePricing(row) {
+        const unitPrice = this.safeParseFloat(row.unitPriceSub);
+
+        if (unitPrice > 0) {
             if (row.units) {
-                row.rate = this.calculateRate(row.unitPriceSub, row.units);
+                const unitValue = this.extractUnitValue(row.units);
+                row.rate = (unitPrice * unitValue).toFixed(2);
             } else if (row.widthM) {
-                row.rate = parseFloat(row.unitPriceSub) * parseFloat(row.widthM);
+                row.rate = (unitPrice * this.safeParseFloat(row.widthM)).toFixed(2);
             }
         }
 
-        if (row.quantitySqm && row.unitPriceSub) {
-            row.amount = this.calculateAmount(row.quantitySqm, row.unitPriceSub);
-        } else if (row.quantity && row.rate) {
-            row.amount = parseFloat(row.quantity) * parseFloat(row.rate);
+        const quantitySqm = this.safeParseFloat(row.quantitySqm);
+        const quantity = this.safeParseFloat(row.quantity);
+        const rate = this.safeParseFloat(row.rate);
+
+        if (quantitySqm && unitPrice) {
+            row.amount = (quantitySqm * unitPrice).toFixed(2);
+        } else if (quantity && rate) {
+            row.amount = (quantity * rate).toFixed(2);
         }
 
-        if (row.amount) {
-            row.taxAmount = this.calculateTaxAmount(row.amount);
-            row.grossAmount = this.calculateGrossAmount(row.amount, row.taxAmount);
+        const amount = this.safeParseFloat(row.amount);
+        if (amount) {
+            row.taxAmount = (amount * TAX_RATE).toFixed(2);
+            row.grossAmount = (amount * (1 + TAX_RATE)).toFixed(2);
+        }
+    }
+
+    calculateCosts(row) {
+        const averageCost = this.safeParseFloat(row.averageCost);
+        const quantity = this.safeParseFloat(row.quantity);
+        if (averageCost && quantity) {
+            row.estExtendedCost = (averageCost * quantity).toFixed(2);
         }
 
-        if (row.averageCost && row.quantity) {
-            row.estExtendedCost = this.calculateEstExtendedCost(row.averageCost, row.quantity);
-        }
-
-        if (row.costPricePerUnit) {
+        const costPricePerUnit = this.safeParseFloat(row.costPricePerUnit);
+        if (costPricePerUnit) {
             if (row.widthM) {
-                row.costPrice = (parseFloat(row.widthM) * parseFloat(row.costPricePerUnit)).toFixed(2);
+                row.costPrice = (this.safeParseFloat(row.widthM) * costPricePerUnit).toFixed(2);
             } else if (row.units) {
-                const unitValue = typeof row.units === 'string' ? parseFloat(row.units.split(' ')[0]) : parseFloat(row.units);
-                row.costPrice = (unitValue * parseFloat(row.costPricePerUnit)).toFixed(2);
+                const unitValue = this.extractUnitValue(row.units);
+                row.costPrice = (unitValue * costPricePerUnit).toFixed(2);
             }
         }
 
         if (row.rate && row.quantity) {
             row.costEstimateType = 'Custom';
         }
-
-        if (row.totalArea) row.totalArea = parseFloat(row.totalArea).toFixed(2);
-        if (row.rate) row.rate = parseFloat(row.rate).toFixed(2);
-        if (row.amount) row.amount = parseFloat(row.amount).toFixed(2);
-        if (row.taxAmount) row.taxAmount = parseFloat(row.taxAmount).toFixed(2);
-        if (row.grossAmount) row.grossAmount = parseFloat(row.grossAmount).toFixed(2);
-        if (row.estExtendedCost) row.estExtendedCost = parseFloat(row.estExtendedCost).toFixed(2);
-        if (row.quantitySqm) row.quantitySqm = parseFloat(row.quantitySqm).toFixed(2);
     }
 
-    handleInputChange(event) {
-        const rowId = event.target.dataset.id;
-        const field = event.target.dataset.field;
-        const value = event.target.value;
-
-        this.tableData = this.tableData.map(row => {
-            if (row.id == rowId) {
-                let updatedRow = { ...row, [field]: value };
-
-                this.performCalculations(updatedRow, field);
-
-                if (field === 'quantity') {
-                    updatedRow.units = updatedRow.units || 'SqM';
-                }
-
-                if (field !== 'length' && updatedRow.totalArea) {
-                    updatedRow.wastageDisable = false;
-                } else if (!updatedRow.totalArea) {
-                    updatedRow.wastageDisable = true;
-                }
-
-                return updatedRow;
+    formatNumbers(row) {
+        const fieldsToFormat = ['totalArea', 'rate', 'amount', 'taxAmount', 'grossAmount', 'estExtendedCost', 'quantitySqm'];
+        fieldsToFormat.forEach(field => {
+            if (row[field]) {
+                row[field] = this.safeParseFloat(row[field]).toFixed(2);
             }
-            return row;
         });
-        if (['amount', 'grossAmount', 'quantity', 'rate', 'unitPriceSub'].includes(field)) {
-            setTimeout(() => {
-                this.recalculateDiscount();
-            }, 100);
+    }
+
+    extractUnitValue(units) {
+        if (typeof units === 'string') {
+            const match = units.match(/^(\d+(?:\.\d+)?)/);
+            return match ? parseFloat(match[1]) : 1;
         }
+        return this.safeParseFloat(units, 1);
     }
-
-    @track selectedRowIndex;
-    handleRowSelection(event) {
-        console.log('event.target.dataset', event.currentTarget.dataset.index);
-        const selectedRowId = parseInt(event.currentTarget.dataset.index, 10);
-        console.log('selectedRowId', selectedRowId);
-        this.selectedRowIndex = selectedRowId;
-        console.log('this.tableData1', this.tableData);
-        this.tableData = this.tableData.map((row, index) => {
-            return { ...row, isSelected: index === selectedRowId };
-        });
-
-        console.log('this.tableData', this.tableData);
-    }
-
-    handleBlur(event) {
-        const selectedRowId = parseInt(event.target.dataset.id, 10);
-        console.log('this.tableData', this.tableData);
-    }
-
-    handleAddRow(event) {
-        const index = this.selectedRowIndex;
-        console.log('index in handle add row', index);
-        if (index !== -1) {
-            this.tableData[index].editmode = !this.tableData[index].editmode;
-            this.tableData[index].readmode = !this.tableData[index].readmode;
-        }
-        this.copyOfSelectedRow = JSON.parse(JSON.stringify(this.tableData[this.selectedRowIndex]));
-        console.log('this.copyOfSelectedRow n ', this.copyOfSelectedRow);
-        console.log('this.tableData in ', this.tableData);
-    }
-
-    @track filteredProducts = [];
-    @track isSuggestionsVisible = false;
 
     handleSearchChange(event) {
-        this.filteredProducts = []
-        const rowId = event.target.dataset.id;
+        const rowId = parseInt(event.target.dataset.id);
         const searchTerm = event.target.value;
-        const index = this.tableData.findIndex(row => row.id == rowId);
-        if (index !== -1) {
-            this.tableData[index].itemInput = searchTerm;
-        }
+
+        this.updateRowSearchTerm(rowId, searchTerm);
+        this.debouncedSearch(searchTerm);
+    }
+
+    updateRowSearchTerm(rowId, searchTerm) {
+        this.tableData = this.tableData.map(row =>
+            row.id === rowId ? { ...row, itemInput: searchTerm } : row
+        );
+    }
+
+    debouncedSearch(searchTerm) {
+        clearTimeout(this.searchTimeout);
 
         if (searchTerm.length > 0) {
-            this.isSuggestionsVisible = true;
-            this.loadProductSuggestions(searchTerm);
+            this.searchTimeout = setTimeout(() => {
+                this.loadProductSuggestions(searchTerm);
+            }, 300);
         } else {
-            this.isSuggestionsVisible = false;
+            this.filteredProducts = [];
         }
     }
 
-    loadProductSuggestions(searchKey) {
-        console.log('searchKey', searchKey);
-        searchProductItems({ searchKey })
-            .then((result) => {
-                console.log('result ', result);
-                this.filteredProducts = result;
-                console.log(' this.filteredProducts', this.filteredProducts);
-            })
-            .catch((error) => {
-                console.error('Error fetching product suggestions', error);
-            });
+    async loadProductSuggestions(searchKey) {
+        try {
+            const result = await searchProductItems({ searchKey });
+            this.filteredProducts = result || [];
+        } catch (error) {
+            console.error('Error fetching product suggestions', error);
+            this.filteredProducts = [];
+        }
     }
 
     handleProductSelect(event) {
-        const productName = event.target.innerText;
-        console.log('productName', productName);
-        const index = event.target.closest('tr').dataset.index;
-        console.log('index', index);
-        const selProductId = event.target.dataset.id;
-        console.log('selProductId', selProductId);
-        const prodIndex = this.filteredProducts.findIndex(prod => prod.Id == selProductId);
-        console.log('prodIndex', prodIndex);
+        const productId = event.target.dataset.id;
+        const rowIndex = parseInt(event.target.closest('tr').dataset.index);
+        const product = this.filteredProducts.find(p => p.Id === productId);
 
-        if (index !== -1) {
-            this.tableData[index].itemInput = productName;
-            console.log('this.tableData[index].itemInput', this.tableData[index].itemInput);
-            if (prodIndex != -1) {
-                const product = this.filteredProducts[prodIndex];
-                console.log('this.filteredProducts[prodIndex]', product.Product2.Description);
-
-                this.tableData[index].description = product.Product2.Description;
-                this.tableData[index].units = product.Product2.Primary_Sale_Unit__c ? product.Product2.Primary_Sale_Unit__c : '';
-                this.tableData[index].widthM = product.Product2.Width_m__c;
-                this.tableData[index].family = product.Product2.Family;
-                this.tableData[index].selectedItemId = product.Id;
-                this.tableData[index].unitPriceSub = product.UnitPrice;
-                this.tableData[index].averageCost = product.Product2.Average_Cost__c || 0;
-                this.tableData[index].costPricePerUnit = product.Cost_Prize__c;
-                this.tableData[index].rate = product.UnitPrice;
-
-                // var isInstallation = false;
-                var isDiscount = false;
-                console.log('product.UnitPrice ', product.UnitPrice);
-                if (this.tableData[index].family && (this.tableData[index].family === 'Wall to Wall' || this.tableData[index].family === 'Sheet Vinyl ' || this.tableData[index].family === 'Grass')) {
-                    console.log('Under if');
-                    this.tableData[index].lengthDisable = false;
-                    this.tableData[index].netAreaDisable = true;
-                } else if (this.tableData[index].family && (this.tableData[index].family === 'Decking' || this.tableData[index].family === 'Wood Flooring' || this.tableData[index].family === 'LVT')) {
-                    console.log('Under else if');
-                    this.tableData[index].netAreaDisable = false;
-                    this.tableData[index].lengthDisable = true;
-                }
-
-                this.performCalculations(this.tableData[index], 'productSelect');
-
-                console.log(' before this.tableData', this.tableData);
-                console.log('this.tableData', this.tableData);
-            }
+        if (product && this.tableData[rowIndex]) {
+            this.applyProductToRow(rowIndex, product);
+            this.hideAllSuggestions();
         }
-        this.isSuggestionsVisible = false;
-        this.isProductSelected = true;
-        this.tableData = [...this.tableData];
-        console.log('this.tableData ', JSON.stringify(this.tableData));
     }
 
-    addDiscountItem(selectedIndex, discountRate) {
-        if (selectedIndex > 0) {
-            let foundProduct = false;
-            let productItem = null;
+    applyProductToRow(rowIndex, product) {
+        const row = { ...this.tableData[rowIndex] };
+        const productData = product.Product2;
 
-            for (let i = selectedIndex - 1; i >= 0; i--) {
-                if (this.tableData[i].family === "Product") {
-                    foundProduct = true;
-                    productItem = this.tableData[i];
-                    break;
-                }
-            }
+        Object.assign(row, {
+            itemInput: productData.Name,
+            description: productData.Description || '',
+            units: productData.Primary_Sale_Unit__c || '',
+            widthM: productData.Width_m__c || '',
+            family: productData.Family || '',
+            selectedItemId: product.Id,
+            unitPriceSub: product.UnitPrice || '',
+            averageCost: productData.Average_Cost__c || 0,
+            costPricePerUnit: product.Cost_Prize__c || '',
+            rate: product.UnitPrice || ''
+        });
 
-            if (foundProduct) {
-                const discountAmount = parseFloat(productItem.amount) * (discountRate / 100);
-                productItem.discountId = this.tableData[selectedIndex].id;
-                productItem.discount = discountRate;
-                this.tableData[selectedIndex].amount = discountAmount.toFixed(2);
-            } else {
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: 'Error',
-                        message: 'No "Product" family item found above the selected index. Discount cannot be applied.',
-                        variant: 'error'
-                    })
-                );
-            }
-        } else {
-            console.error('Invalid index or no item above the selected index.');
-        }
+        this.setFieldStatesForFamily(row);
+
+        this.performCalculations(row, 'productSelect');
+
+        this.tableData = [
+            ...this.tableData.slice(0, rowIndex),
+            row,
+            ...this.tableData.slice(rowIndex + 1)
+        ];
+    }
+
+    setFieldStatesForFamily(row) {
+        const isWallToWall = PRODUCT_FAMILIES.WALL_TO_WALL.includes(row.family);
+        const isDecking = PRODUCT_FAMILIES.DECKING.includes(row.family);
+
+        row.netAreaDisable = isWallToWall;
+        row.lengthDisable = isDecking;
+    }
+
+    hideAllSuggestions() {
+        this.tableData = this.tableData.map(row => ({
+            ...row,
+            isSuggestionsVisible: false
+        }));
+        this.filteredProducts = [];
     }
 
     handleFocus(event) {
-        const rowId = event.target.dataset.id;
+        const rowId = parseInt(event.target.dataset.id);
         this.toggleSuggestionVisibility(rowId, true);
     }
 
     handleBlur(event) {
-        const rowId = event.target.dataset.id;
+        const rowId = parseInt(event.target.dataset.id);
         setTimeout(() => {
             this.toggleSuggestionVisibility(rowId, false);
         }, 200);
     }
 
     toggleSuggestionVisibility(rowId, isVisible) {
-        console.log('rowId', rowId);
         this.tableData = this.tableData.map(row =>
-            row.id == rowId ? { ...row, isSuggestionsVisible: isVisible } : row
+            row.id === rowId ? { ...row, isSuggestionsVisible: isVisible } : row
         );
+    }
+
+    handleRowSelection(event) {
+        const selectedIndex = parseInt(event.currentTarget.dataset.index);
+        this.selectedRowIndex = selectedIndex;
+
+        this.tableData = this.tableData.map((row, index) => ({
+            ...row,
+            isSelected: index === selectedIndex
+        }));
+    }
+
+    handleAddRow() {
+        if (this.selectedRowIndex === -1) return;
+
+        const selectedRow = this.tableData[this.selectedRowIndex];
+        const isEditMode = selectedRow.editmode;
+
+        this.tableData[this.selectedRowIndex] = {
+            ...selectedRow,
+            editmode: !isEditMode,
+            readmode: isEditMode
+        };
+
+        if (!isEditMode) {
+            this.copyOfSelectedRow = JSON.parse(JSON.stringify(selectedRow));
+        }
+
         this.tableData = [...this.tableData];
-        console.log('this.tableData', this.tableData);
     }
 
     handleCancel() {
-        console.log('this.copyOfSelectedRow', this.copyOfSelectedRow);
-        this.tableData[this.selectedRowIndex] = this.copyOfSelectedRow;
-        this.tableData[this.selectedRowIndex].editmode = false;
-        this.tableData[this.selectedRowIndex].readmode = true;
-    }
+        if (this.selectedRowIndex === -1 || !this.copyOfSelectedRow) return;
 
-    handleClearAll() {
-        this.tableData = [];
+        this.tableData[this.selectedRowIndex] = {
+            ...this.copyOfSelectedRow,
+            editmode: false,
+            readmode: true
+        };
+        this.tableData = [...this.tableData];
     }
 
     handleInsert() {
+        if (this.selectedRowIndex === -1) return;
+
         const newRow = this.createNewRow();
-        let index = this.selectedRowIndex + 1;
-        console.log('index', index);
+        const insertIndex = this.selectedRowIndex + 1;
 
         this.tableData = [
-            ...this.tableData.slice(0, index).map(row => ({ ...row, isSelected: false })),
+            ...this.tableData.slice(0, insertIndex).map(row => ({ ...row, isSelected: false })),
             newRow,
-            ...this.tableData.slice(index).map(row => ({ ...row, isSelected: false }))
+            ...this.tableData.slice(insertIndex).map(row => ({ ...row, isSelected: false }))
         ];
-        this.selectedRowIndex = index;
-        this.copyOfSelectedRow = JSON.parse(JSON.stringify(this.tableData[this.selectedRowIndex]));
-        console.log('this.tableData in ', this.tableData);
+
+        this.selectedRowIndex = insertIndex;
+        this.copyOfSelectedRow = JSON.parse(JSON.stringify(newRow));
     }
 
     handleRemove() {
-        if (this.selectedRowIndex > 0) {
-            this.tableData.splice(this.selectedRowIndex, 1);
+        if (this.selectedRowIndex <= 0 || this.tableData.length <= 1) return;
+
+        const selectedRow = this.tableData[this.selectedRowIndex];
+
+        if (selectedRow.item === 'Discount' || selectedRow.description?.includes('discount')) {
+            this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
+            this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
+            this.rate = 0;
+            this.discountDropdownValue = null;
+            return;
         }
+
+        this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
+        this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
+
+        this.recalculateDiscount();
     }
 
-    handleCopyPrevious() {
-        if (this.tableData[this.selectedRowIndex]) {
-            const previousRow = JSON.parse(JSON.stringify(this.tableData[this.selectedRowIndex]));
 
-            const newRow = {
-                ...previousRow,
-                id: this.generateNewId(),
-                isSelected: true
-            };
-            let index = this.selectedRowIndex + 1;
-
-            this.tableData = [
-                ...this.tableData.slice(0, index).map(row => ({ ...row, isSelected: false })),
-                newRow,
-                ...this.tableData.slice(index).map(row => ({ ...row, isSelected: false }))
-            ];
-            this.selectedRowIndex = index;
-            this.copyOfSelectedRow = JSON.parse(JSON.stringify(this.tableData[this.selectedRowIndex]));
-        } else {
-            console.error('No previous row to copy from.');
-        }
-    }
-
-    generateNewId() {
-        return `row-${Math.random().toString(36).substring(2, 9)}`;
-    }
-
-    handleSave(event) {
+    async handleSave() {
         this.isLoading = true;
-        // this.checkPendingApprovalAndCreateItems();
-        this.createQuoteLineItemData();
+        try {
+            await this.createQuoteLineItemData();
+        } catch (error) {
+            this.showToast('Error', 'Failed to save items', 'error');
+        } finally {
+            this.isLoading = false;
+        }
     }
 
-    checkPendingApprovalAndCreateItems() {
-        console.log('this.recordId ', this.recordId)
-        getPendingApprovalStatus({ quoteId: this.recordId }).then(hasPendingApproval => {
-            console.log('hasPendingApproval ', hasPendingApproval);
-            if (hasPendingApproval) {
-                this.showToast('Warning', 'Unable to create a new Quote Line Item while approval is pending', 'warning', 'dismissable');
-                this.dispatchEvent(new CustomEvent('close'));
-                return;
-            } else {
-                this.createQuoteLineItemData();
-            }
-        }).catch(error => {
-            this.showToast('Error', error.body.message, 'error', 'dismissable');
-            console.log('error ' + error);
-        });
+    async createQuoteLineItemData() {
+        const dataObj = this.buildQuoteLineItems();
+        console.log('dataObj ', JSON.stringify(dataObj));
+        const totalDiscountAmount = this.calculateDiscountAmount();
+        const discountPercent = this.safeParseFloat(this.rate);
+
+        try {
+            await upsertQuoteLineItems({
+                lineItemsData: dataObj,
+                discountPercent,
+                discountAmount: totalDiscountAmount
+            });
+            this.showToast('Success', 'Quote Line Items saved successfully!', 'success');
+        } catch (error) {
+            throw new Error(error.body?.message || 'Failed to save items');
+        }
     }
 
-    createQuoteLineItemData() {
-        let dataObj = [];
-        let totalDiscountAmount = 0;
-        this.tableData.forEach(product => {
-            if (product.location === 'Discount' && product.amount) {
-                totalDiscountAmount += Math.abs(parseFloat(product.amount));
-                return;
-            }
-            dataObj.push({
+    buildQuoteLineItems() {
+        return this.tableData
+            .filter(row => row.location !== 'Discount')
+            .map(product => ({
                 salesforceId: product.salesforceId,
                 quoteId: this.recordId,
-                location: product.location,
-                productId: product.selectedItemId,
+                location: product.location || '',
+                productId: product.selectedItemId || '',
                 productDescription: product.description || '',
-                netArea: product.netArea ? Number(product.netArea) : 0,
-                wastage: product.wastage ? Number(product.wastage) : 0,
-                length: product.length ? product.length + '' : '',
-                width: product.widthM ? product.widthM + '' : '',
-                totalArea: product.totalArea ? Number(product.totalArea) : 0,
-                rate: product.rate ? Number(product.rate) : 0,
-                productUnitPrice:
-                    product.family !== 'Discount' && product.unitPriceSub
-                        ? Number(product.unitPriceSub ?? 0)
-                        : product.family === 'Discount' && product.rate
-                            ? Number(product.rate ?? 0)
-                            : 0,
-                quantity: product.quantity || 1,
-                quantityArea: product.quantitySqm ? Number(product.quantitySqm) : 0,
-                price: Number(product.amount),
-                taxAmount: product.taxAmount ? Number(product.taxAmount) : 0,
-                grossAmount: product.grossAmount ? Number(product.grossAmount) : 0,
-                estExtendedCost: product.estExtendedCost ? Number(product.estExtendedCost) : 0,
-                discountPercentage: product.discount ? Number(product.discount * -1) : 0,
-                discountId: product.discountId ? product.discountId + '' : '',
-                rowId: product.id ? product.id + '' : '',
+                netArea: this.safeParseFloat(product.netArea),
+                wastage: this.safeParseFloat(product.wastage),
+                length: product.length || '',
+                width: product.widthM || '',
+                totalArea: this.safeParseFloat(product.totalArea),
+                rate: this.safeParseFloat(product.rate),
+                productUnitPrice: this.safeParseFloat(product.unitPriceSub),
+                quantity: this.safeParseFloat(product.quantity, 1),
+                quantityArea: this.safeParseFloat(product.quantitySqm),
+                price: this.safeParseFloat(product.amount),
+                taxAmount: this.safeParseFloat(product.taxAmount),
+                grossAmount: this.safeParseFloat(product.grossAmount),
+                estExtendedCost: this.safeParseFloat(product.estExtendedCost),
+                discountPercentage: this.safeParseFloat(product.discount) * -1,
+                discountId: product.discountId || '',
+                rowId: product.id.toString(),
                 units: product.units || '',
-                costPrice: product.costPrice,
-                type: product.family
-            });
-        });
-
-        console.log("dataObj ==?> ", JSON.stringify(dataObj));
-
-        const discountPercent = this.rate ? parseFloat(this.rate) : 0;
-        upsertQuoteLineItems({ lineItemsData: dataObj, discountPercent: discountPercent, discountAmount: totalDiscountAmount })
-            .then(() => {
-                this.showToast('Success', 'Quote Line Items created successfully!', 'success', 'dismissable');
-                this.isLoading = false;
-            })
-            .catch(error => {
-                this.showToast('Error', error.body.message, 'error', 'dismissable');
-                this.isLoading = false;
-            });
-        this.isLoading = false;
+                costPrice: product.costPrice || '',
+                type: product.family || ''
+            }));
     }
 
-    recalculateDiscount() {
-        if (this.rate && this.rate !== '') {
-            this.addDiscountRow(parseFloat(this.rate));
-        }
+    calculateDiscountAmount() {
+        return this.tableData
+            .filter(row => row.location === 'Discount' && row.amount)
+            .reduce((total, row) => total + Math.abs(this.safeParseFloat(row.amount)), 0);
     }
 
-    showToast(title, message, variant, mode) {
-        const evt = new ShowToastEvent({
-            title: title,
-            message: message,
-            variant: variant,
-            mode: mode
-        });
-        this.dispatchEvent(evt);
+    showToast(title, message, variant, mode = 'dismissable') {
+        this.dispatchEvent(new ShowToastEvent({
+            title,
+            message,
+            variant,
+            mode
+        }));
     }
 }
