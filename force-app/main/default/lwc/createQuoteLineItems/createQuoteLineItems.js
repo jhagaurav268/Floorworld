@@ -5,12 +5,13 @@ import upsertQuoteLineItems from '@salesforce/apex/QuoteController.upsertQuoteLi
 import getExistingQuoteLineItems from '@salesforce/apex/QuoteController.getExistingQuoteLineItems';
 
 const PRODUCT_FAMILIES = {
-    WALL_TO_WALL: ['Wall to Wall', 'Sheet Vinyl', 'Grass'],
-    DECKING: ['Decking', 'Wood Flooring', 'LVT']
+    WALL_TO_WALL: ['Wall to Wall', 'F.SHEET-VINYL', 'F.ARTIFICIAL GRASS'],
+    DECKING: ['F. DECKING', 'Wood Flooring', 'F.LVT']
 };
 
 const TAX_RATE = 0.05;
 const DISCOUNT_FAMILY = 'Discount';
+const INDIVIDUAL_DISCOUNT_PRODUCTS = ['5% Discount', '10% Discount', '15% Discount', '20% Discount'];
 
 export default class FloorWorldCarpetSolution extends LightningElement {
     @api recordId;
@@ -56,7 +57,23 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             const data = await getExistingQuoteLineItems({ quoteId: this.recordId });
             const existingRows = data.map(item => this.mapItemToTableRow(item));
 
-            this.tableData = existingRows.length > 0 ? existingRows : [this.createNewRow()];
+            const discountRows = existingRows.filter(row => row.family === DISCOUNT_FAMILY);
+            const nonDiscountRows = existingRows.filter(row => row.family !== DISCOUNT_FAMILY);
+
+            if (existingRows.length > 0) {
+                this.tableData = [...nonDiscountRows, ...discountRows];
+
+                const overallDiscount = discountRows.find(row => row.location === 'Discount');
+                if (overallDiscount && overallDiscount.itemInput) {
+                    const match = overallDiscount.itemInput.match(/(\d+)%/);
+                    if (match) {
+                        this.rate = match[1];
+                        this.selectedDiscount = match[1];
+                    }
+                }
+            } else {
+                this.tableData = [this.createNewRow()];
+            }
         } catch (error) {
             this.showToast('Error', error.body?.message || 'Failed to load items', 'error');
             this.tableData = [this.createNewRow()];
@@ -97,7 +114,9 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             isSelected: false,
             netAreaDisable: false,
             wastageDisable: true,
-            lengthDisable: false
+            lengthDisable: false,
+            individualDiscountRow: null, 
+            discountAppliedFromRow: null 
         };
     }
 
@@ -138,7 +157,9 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             isSelected: false,
             netAreaDisable: isWallToWall,
             wastageDisable: true,
-            lengthDisable: isDecking
+            lengthDisable: isDecking,
+            individualDiscountRow: null,
+            discountAppliedFromRow: null
         };
     }
 
@@ -158,47 +179,70 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     handleDiscountChange(event) {
         this.selectedDiscount = event.detail.value;
         this.rate = this.selectedDiscount;
-        this.applyDiscount();
+        this.applyOverallDiscount();
     }
 
     handleRateChange(event) {
         this.rate = event.target.value;
         console.log('this.rate ', this.rate);
-        this.applyDiscount();
+        this.applyOverallDiscount();
     }
 
-    applyDiscount() {
+    applyOverallDiscount() {
         if (this.rate && this.rate !== '') {
             const discountRate = this.safeParseFloat(this.rate);
             console.log('discountRate ', discountRate);
 
             if (discountRate > 0) {
-                this.addDiscountRow(discountRate);
+                this.addOverallDiscountRow(discountRate);
             }
+        } else {
+            this.removeOverallDiscountRow();
         }
     }
 
-    addDiscountRow(discountRate) {
-        const totalGrossAmount = (this.calculateTotalGrossAmount() * discountRate) / 100;
-        const totalRate = (this.calculateTotalRate() * discountRate) / 100;
-        const unitPriceSub = (this.calculateunitPriceSub() * discountRate) / 100;
-        const amount = (this.calculateAmount() * discountRate) / 100;
-        const taxAmount = (this.calculateTaxAmount() * discountRate) / 100;
+    addOverallDiscountRow(discountRate) {
+        const eligibleRows = this.tableData.filter(row =>
+            row.family !== DISCOUNT_FAMILY &&
+            !INDIVIDUAL_DISCOUNT_PRODUCTS.includes(row.itemInput)
+        );
+
+        const totalGrossAmount = eligibleRows.reduce((total, row) =>
+            total + this.safeParseFloat(row.grossAmount), 0);
+        const totalRate = eligibleRows.reduce((total, row) =>
+            total + this.safeParseFloat(row.rate), 0);
+        const unitPriceSub = eligibleRows.reduce((total, row) =>
+            total + this.safeParseFloat(row.unitPriceSub), 0);
+        const amount = eligibleRows.reduce((total, row) =>
+            total + this.safeParseFloat(row.amount), 0);
+        const taxAmount = eligibleRows.reduce((total, row) =>
+            total + this.safeParseFloat(row.taxAmount), 0);
 
         if (totalGrossAmount <= 0) {
             this.showToast('Warning', 'No items available to apply discount. Please add items first.', 'warning');
             return;
         }
 
-        this.tableData = this.tableData.filter(row => row.family !== DISCOUNT_FAMILY);
+        this.removeOverallDiscountRow();
 
-        const discountRow = this.createDiscountRow(discountRate, totalGrossAmount, totalRate, unitPriceSub, amount, taxAmount);
+        const discountRow = this.createOverallDiscountRow(discountRate, totalGrossAmount, totalRate, unitPriceSub, amount, taxAmount);
 
         this.tableData = [...this.tableData, discountRow];
-        this.showToast('Success', `${discountRate}% discount applied successfully!`, 'success');
+        this.showToast('Success', `${discountRate}% overall discount applied successfully!`, 'success');
     }
 
-    createDiscountRow(discountRate, totalGrossAmount, totalRate, unitPriceSub, amount, taxAmount) {
+    removeOverallDiscountRow() {
+        this.tableData = this.tableData.filter(row =>
+            !(row.family === DISCOUNT_FAMILY && row.location === 'Discount')
+        );
+    }
+
+    createOverallDiscountRow(discountRate, totalGrossAmount, totalRate, unitPriceSub, amount, taxAmount) {
+        const discountAmount = (totalGrossAmount * discountRate) / 100;
+        const discountRateAmount = (totalRate * discountRate) / 100;
+        const discountUnitPrice = (unitPriceSub * discountRate) / 100;
+        const discountAmountOnly = (amount * discountRate) / 100;
+        const discountTaxAmount = (taxAmount * discountRate) / 100;
 
         return {
             ...this.createNewRow(),
@@ -206,11 +250,11 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             itemInput: `Discount (${discountRate}%)`,
             description: `${discountRate}% discount on total amount`,
             quantity: 1,
-            rate: -totalRate.toFixed(2),
-            unitPriceSub: -unitPriceSub.toFixed(2),
-            amount: -amount.toFixed(2),
-            taxAmount: -taxAmount.toFixed(2),
-            grossAmount: -totalGrossAmount.toFixed(2),
+            rate: -discountRateAmount.toFixed(2),
+            unitPriceSub: -discountUnitPrice.toFixed(2),
+            amount: -discountAmountOnly.toFixed(2),
+            taxAmount: -discountTaxAmount.toFixed(2),
+            grossAmount: -discountAmount.toFixed(2),
             costEstimateType: 'Discount',
             estimateType: 'Discount',
             family: DISCOUNT_FAMILY,
@@ -221,40 +265,69 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         };
     }
 
-    calculateTotalGrossAmount() {
-        return this.tableData
-            .filter(row => row.family !== DISCOUNT_FAMILY && row.grossAmount)
-            .reduce((total, row) => total + this.safeParseFloat(row.grossAmount), 0);
-    }
+    applyIndividualDiscount(targetRowIndex, discountProduct) {
+        const targetRow = this.tableData[targetRowIndex];
+        if (!targetRow) return;
 
-    calculateTotalRate() {
-        return this.tableData
-            .filter(row => row.family !== DISCOUNT_FAMILY && row.rate)
-            .reduce((total, row) => total + this.safeParseFloat(row.rate), 0);
-    }
+        const match = discountProduct.itemInput.match(/(\d+)%/);
+        if (!match) return;
 
-    calculateunitPriceSub() {
-        return this.tableData
-            .filter(row => row.family !== DISCOUNT_FAMILY && row.unitPriceSub)
-            .reduce((total, row) => total + this.safeParseFloat(row.unitPriceSub), 0);
-    }
+        const discountRate = parseInt(match[1]);
 
-    calculateAmount() {
-        return this.tableData
-            .filter(row => row.family !== DISCOUNT_FAMILY && row.amount)
-            .reduce((total, row) => total + this.safeParseFloat(row.amount), 0);
-    }
+        const discountAmount = (this.safeParseFloat(targetRow.grossAmount) * discountRate) / 100;
+        const discountRateAmount = (this.safeParseFloat(targetRow.rate) * discountRate) / 100;
+        const discountUnitPrice = (this.safeParseFloat(targetRow.unitPriceSub) * discountRate) / 100;
+        const discountAmountOnly = (this.safeParseFloat(targetRow.amount) * discountRate) / 100;
+        const discountTaxAmount = (this.safeParseFloat(targetRow.taxAmount) * discountRate) / 100;
 
-    calculateTaxAmount() {
-        return this.tableData
-            .filter(row => row.family !== DISCOUNT_FAMILY && row.taxAmount)
-            .reduce((total, row) => total + this.safeParseFloat(row.taxAmount), 0);
-    }
+        const updatedDiscountProduct = {
+            ...discountProduct,
+            quantity: 1,
+            rate: -discountRateAmount.toFixed(2),
+            unitPriceSub: -discountUnitPrice.toFixed(2),
+            amount: -discountAmountOnly.toFixed(2),
+            taxAmount: -discountTaxAmount.toFixed(2),
+            grossAmount: -discountAmount.toFixed(2),
+            description: `${discountRate}% discount applied to: ${targetRow.itemInput}`,
+            editmode: false,
+            readmode: true,
+            netAreaDisable: true,
+            lengthDisable: true
+        };
 
-    recalculateDiscount() {
-        if (this.rate && this.rate !== '') {
-            this.addDiscountRow(this.safeParseFloat(this.rate));
+        const discountProductIndex = this.tableData.findIndex(row => row.id === discountProduct.id);
+
+        if (discountProductIndex !== -1) {
+            this.tableData[discountProductIndex] = updatedDiscountProduct;
+
+            this.tableData[targetRowIndex] = {
+                ...targetRow,
+                individualDiscountRow: updatedDiscountProduct.id
+            };
+
+            updatedDiscountProduct.discountAppliedFromRow = targetRow.id;
+
+            this.tableData = [...this.tableData];
+
+            this.showToast('Success', `${discountRate}% individual discount applied to ${targetRow.itemInput}!`, 'success');
         }
+    }
+
+    recalculateOverallDiscount() {
+        if (this.rate && this.rate !== '') {
+            this.addOverallDiscountRow(this.safeParseFloat(this.rate));
+        }
+    }
+
+    recalculateIndividualDiscounts() {
+        this.tableData.forEach((row, index) => {
+            if (INDIVIDUAL_DISCOUNT_PRODUCTS.includes(row.itemInput) && row.discountAppliedFromRow) {
+                const targetRowIndex = this.tableData.findIndex(r => r.id === row.discountAppliedFromRow);
+                if (targetRowIndex !== -1) {
+                    this.applyIndividualDiscount(targetRowIndex, row);
+                }
+            }
+        });
     }
 
     handleInputChange(event) {
@@ -280,7 +353,10 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     scheduleDiscountRecalculation(field) {
         const fieldsToRecalculate = ['amount', 'grossAmount', 'quantity', 'rate', 'unitPriceSub'];
         if (fieldsToRecalculate.includes(field)) {
-            setTimeout(() => this.recalculateDiscount(), 100);
+            setTimeout(() => {
+                this.recalculateOverallDiscount();
+                this.recalculateIndividualDiscounts();
+            }, 100);
         }
     }
 
@@ -484,6 +560,15 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             row,
             ...this.tableData.slice(rowIndex + 1)
         ];
+
+        if (INDIVIDUAL_DISCOUNT_PRODUCTS.includes(productData.Name)) {
+            const targetRowIndex = rowIndex - 1;
+            if (targetRowIndex >= 0) {
+                setTimeout(() => {
+                    this.applyIndividualDiscount(targetRowIndex, this.tableData[rowIndex]);
+                }, 100);
+            }
+        }
     }
 
     setFieldStatesForFamily(row) {
@@ -564,7 +649,16 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         if (this.selectedRowIndex === -1) return;
 
         const newRow = this.createNewRow();
-        const insertIndex = this.selectedRowIndex + 1;
+
+        let insertIndex = this.selectedRowIndex + 1;
+
+        const overallDiscountIndex = this.tableData.findIndex(row =>
+            row.family === DISCOUNT_FAMILY && row.location === 'Discount'
+        );
+
+        if (overallDiscountIndex !== -1 && insertIndex > overallDiscountIndex) {
+            insertIndex = overallDiscountIndex;
+        }
 
         this.tableData = [
             ...this.tableData.slice(0, insertIndex).map(row => ({ ...row, isSelected: false })),
@@ -581,20 +675,28 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
         const selectedRow = this.tableData[this.selectedRowIndex];
 
-        if (selectedRow.item === 'Discount' || selectedRow.description?.includes('discount')) {
+        if (selectedRow.family === DISCOUNT_FAMILY && selectedRow.location === 'Discount') {
             this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
             this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
-            this.rate = 0;
-            this.discountDropdownValue = null;
+            this.rate = '';
+            this.selectedDiscount = '';
+            return;
+        }
+
+        if (INDIVIDUAL_DISCOUNT_PRODUCTS.includes(selectedRow.itemInput)) {
+            this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
+            this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
             return;
         }
 
         this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
         this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
 
-        this.recalculateDiscount();
+        setTimeout(() => {
+            this.recalculateOverallDiscount();
+            this.recalculateIndividualDiscounts();
+        }, 100);
     }
-
 
     async handleSave() {
         this.isLoading = true;
@@ -610,7 +712,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     async createQuoteLineItemData() {
         const dataObj = this.buildQuoteLineItems();
         console.log('dataObj ', JSON.stringify(dataObj));
-        const totalDiscountAmount = this.calculateDiscountAmount();
+        const totalDiscountAmount = this.calculateOverallDiscountAmount();
         const discountPercent = this.safeParseFloat(this.rate);
 
         try {
@@ -626,39 +728,40 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     }
 
     buildQuoteLineItems() {
-        return this.tableData
-            .filter(row => row.location !== 'Discount')
-            .map(product => ({
-                salesforceId: product.salesforceId,
-                quoteId: this.recordId,
-                location: product.location || '',
-                productId: product.selectedItemId || '',
-                productDescription: product.description || '',
-                netArea: this.safeParseFloat(product.netArea),
-                wastage: this.safeParseFloat(product.wastage),
-                length: product.length || '',
-                width: product.widthM || '',
-                totalArea: this.safeParseFloat(product.totalArea),
-                rate: this.safeParseFloat(product.rate),
-                productUnitPrice: this.safeParseFloat(product.unitPriceSub),
-                quantity: this.safeParseFloat(product.quantity, 1),
-                quantityArea: this.safeParseFloat(product.quantitySqm),
-                price: this.safeParseFloat(product.amount),
-                taxAmount: this.safeParseFloat(product.taxAmount),
-                grossAmount: this.safeParseFloat(product.grossAmount),
-                estExtendedCost: this.safeParseFloat(product.estExtendedCost),
-                discountPercentage: this.safeParseFloat(product.discount) * -1,
-                discountId: product.discountId || '',
-                rowId: product.id.toString(),
-                units: product.units || '',
-                costPrice: product.costPrice || '',
-                type: product.family || ''
-            }));
+        return this.tableData.map(product => ({
+            salesforceId: product.salesforceId,
+            quoteId: this.recordId,
+            location: product.location || '',
+            productId: product.selectedItemId || '',
+            productDescription: product.description || '',
+            netArea: this.safeParseFloat(product.netArea),
+            wastage: this.safeParseFloat(product.wastage),
+            length: product.length || '',
+            width: product.widthM || '',
+            totalArea: this.safeParseFloat(product.totalArea),
+            rate: this.safeParseFloat(product.rate),
+            productUnitPrice: this.safeParseFloat(product.unitPriceSub),
+            quantity: this.safeParseFloat(product.quantity, 1),
+            quantityArea: this.safeParseFloat(product.quantitySqm),
+            price: this.safeParseFloat(product.amount),
+            taxAmount: this.safeParseFloat(product.taxAmount),
+            grossAmount: this.safeParseFloat(product.grossAmount),
+            estExtendedCost: this.safeParseFloat(product.estExtendedCost),
+            discountPercentage: this.safeParseFloat(product.discount) * -1,
+            discountId: product.discountId || '',
+            rowId: product.id.toString(),
+            units: product.units || '',
+            costPrice: product.costPrice || '',
+            type: product.family || '',
+            isIndividualDiscount: INDIVIDUAL_DISCOUNT_PRODUCTS.includes(product.itemInput),
+            discountAppliedFromRow: product.discountAppliedFromRow || null,
+            individualDiscountRow: product.individualDiscountRow || null
+        }));
     }
 
-    calculateDiscountAmount() {
+    calculateOverallDiscountAmount() {
         return this.tableData
-            .filter(row => row.location === 'Discount' && row.amount)
+            .filter(row => row.family === DISCOUNT_FAMILY && row.location === 'Discount' && row.amount)
             .reduce((total, row) => total + Math.abs(this.safeParseFloat(row.amount)), 0);
     }
 
