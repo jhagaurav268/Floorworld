@@ -1,149 +1,15 @@
 public class QuoteController {    
-    private static List<Id> getNextApproverIds(Quote quoteRecord) {
-        List<Id> approverIds = new List<Id>();
-        
-        String approverRoleName = 'Sales Manager'; 
-        List<User> approvers = [
-            SELECT Id 
-            FROM User 
-            WHERE UserRole.Name = :approverRoleName 
-            AND IsActive = true
-        ];
-        
-        for (User approver : approvers) {
-            approverIds.add(approver.Id);
-        }
-        
-        return approverIds;
-    }
-    
-    @AuraEnabled(cacheable=true)
-    public static List<PricebookEntry> getProducts() {
-        Pricebook2 pb = [SELECT Id FROM Pricebook2 WHERE Name = 'Floor World Price Book' AND IsActive = true LIMIT 1];
-        
-        if (pb == null) {
-            return new List<PricebookEntry>();
-        }
-        
-        return [
-            SELECT Product2.Name, Product2.ProductCode, UnitPrice, Product2.Description, Product2.Family 
-            FROM PricebookEntry 
-            WHERE Pricebook2Id = :pb.Id 
-            AND Product2.Variant__c = false 
-            AND IsActive = true
-            ORDER BY Product2.Name ASC
-        ];
-    }
-    
-    @AuraEnabled(cacheable=true)
-    public static String getCurrencyIsoCode(String recordId) {
-        System.debug('recordId ==> '+ recordId);
-        return [SELECT Opportunity.CurrencyIsoCode 
-                FROM Quote 
-                WHERE Id = :recordId].Opportunity.CurrencyIsoCode;
-    }
-    
-    @AuraEnabled
-    public static Boolean getPendingApprovalStatus(Id quoteId) {
-        List<ProcessInstance> pendingApprovals = [
-            SELECT Id 
-            FROM ProcessInstance 
-            WHERE TargetObjectId = :quoteId 
-            AND Status = 'Pending'
-            LIMIT 1
-        ];
-        
-        return !pendingApprovals.isEmpty();
-    }
-    
-    /*@AuraEnabled
-public static List<ProcessInstance> getPendingApprovalRequest(Id quoteId) {
-List<ProcessInstance> pendingApprovals = [
-SELECT Id, CreatedDate, Status,
-(SELECT Id, Actor.Name FROM Workitems WHERE ProcessInstance.status='Pending')
-FROM ProcessInstance 
-WHERE status='Pending' 
-];
-
-return pendingApprovals;
-}*/
-    public class ApprovalRequestWrapper {
-        @AuraEnabled public Id processInstanceId;
-        @AuraEnabled public Id quoteId;
-        @AuraEnabled public String status;
-        @AuraEnabled public String createdDate;
-        @AuraEnabled public String actorName;
-        @AuraEnabled public Decimal customDiscount;
-        @AuraEnabled public Decimal overallAmount;
-        @AuraEnabled public Decimal grossProfit;
-        @AuraEnabled public Decimal grossProfitPer;
-        @AuraEnabled public Decimal finalAmount;
-        @AuraEnabled public String quoteName;
-        @AuraEnabled public String quoteLink;
-        @AuraEnabled public String stepName; 
-        @AuraEnabled public String stepLink; 
-    }
-    
-    @AuraEnabled(cacheable=true)
-    public static List<ApprovalRequestWrapper> getPendingApprovalRequest() {
-        
-        List<ProcessInstance> processInstances = [
-            SELECT Id, CreatedDate, Status, TargetObjectId,
-            (SELECT Id, Actor.Name FROM Workitems WHERE ProcessInstance.Status = 'Pending')
-            FROM ProcessInstance
-            WHERE Status = 'Pending' AND TargetObject.Type = 'Quote'
-        ];
-        
-        Set<Id> quoteIds = new Set<Id>();
-        for (ProcessInstance pi : processInstances) {
-            if (pi.TargetObjectId != null) {
-                quoteIds.add(pi.TargetObjectId);
-            }
-        }
-        
-        Map<Id, Quote> quoteMap = new Map<Id, Quote>(
-            [SELECT Id, Name, TotalPrice FROM Quote WHERE Id IN :quoteIds]
-        );
-        
-        List<ApprovalRequestWrapper> wrappers = new List<ApprovalRequestWrapper>();
-        for (ProcessInstance pi : processInstances) {
-            Quote relatedQuote = quoteMap.get(pi.TargetObjectId);
-            ApprovalRequestWrapper wrapper = new ApprovalRequestWrapper();
-            wrapper.processInstanceId = pi.Id;
-            wrapper.quoteId = pi.TargetObjectId;
-            wrapper.status = pi.Status;
-            wrapper.createdDate = pi.CreatedDate.format();
-            //wrapper.customDiscount = relatedQuote != null ? relatedQuote.Custom_Discount__c : null;
-            /*wrapper.finalAmount = relatedQuote != null ? relatedQuote.Final_Amount__c : null;
-wrapper.grossProfitPer = relatedQuote != null ? relatedQuote.Est_Gross_Profit_Percents__c : null;
-wrapper.grossProfit = relatedQuote != null ? relatedQuote.Gross_Profit__c : null;*/
-            wrapper.overallAmount = relatedQuote != null ? relatedQuote.TotalPrice : null;
-            wrapper.quoteName = relatedQuote != null ? relatedQuote.Name : null;
-            wrapper.quoteLink = '/lightning/r/Quote/' + pi.TargetObjectId + '/view';
-            
-            List<String> actorNames = new List<String>();
-            String stepName = 'Approval Request for '+ wrapper.quoteName;
-            String stepLink = '';
-            for (ProcessInstanceWorkitem workitem : pi.Workitems) {
-                if (workitem.Actor != null) {
-                    actorNames.add(workitem.Actor.Name);
-                }
-                if (stepLink == '' && workitem.Id != null) {
-                    stepLink = '/lightning/r/ProcessInstanceWorkitem/' + workitem.Id + '/view';
-                }
-            }
-            wrapper.actorName = String.join(actorNames, ', ');
-            wrapper.stepName = stepName;
-            wrapper.stepLink = stepLink;
-            wrappers.add(wrapper);
-        }
-        
-        return wrappers;
-    }
     
     @AuraEnabled(cacheable=true)
     public static List<QuoteLineItemDTO> getExistingQuoteLineItems(Id quoteId) {
         List<QuoteLineItemDTO> result = new List<QuoteLineItemDTO>();
+        
+        Quote quote = [
+            SELECT Id, Discount__c, Discounted_Amount__c 
+            FROM Quote 
+            WHERE Id = :quoteId 
+            LIMIT 1
+        ];
         
         List<QuoteLineItem> qlis = [
             SELECT Id, QuoteId, Product2Id, Product2.Name, Description, Quantity, UnitPrice, Product2.Family,
@@ -151,13 +17,14 @@ wrapper.grossProfit = relatedQuote != null ? relatedQuote.Gross_Profit__c : null
             Discount, Length_m__c, Width_m__c, Total_Area__c, Unit__c, Date__c, Gross_Amount__c, Tax_Amount__c, Amount__c
             FROM QuoteLineItem
             WHERE QuoteId = :quoteId
+            ORDER BY CreatedDate ASC
         ];
         
         for (QuoteLineItem qli : qlis) {
             QuoteLineItemDTO dto = new QuoteLineItemDTO();
             dto.salesforceId = qli.Id;
             dto.quoteId = qli.QuoteId;
-            dto.productName = qli.Product2.Name;
+            dto.productName = qli.Product2 != null ? qli.Product2.Name : '';
             dto.location = qli.Location__c;
             dto.productId = qli.Product2Id;
             dto.productDescription = qli.Description;
@@ -178,34 +45,82 @@ wrapper.grossProfit = relatedQuote != null ? relatedQuote.Gross_Profit__c : null
             dto.amount = qli.Amount__c;
             dto.taxAmount = qli.Tax_Amount__c;
             dto.grossAmount = qli.Gross_Amount__c;
-            dto.productFamily = qli.Product2.Family;
+            dto.productFamily = qli.Product2 != null ? qli.Product2.Family : '';
+            
+            List<String> individualDiscountProducts = new List<String>{'5% Discount', '10% Discount', '15% Discount', '20% Discount'};
+            dto.isIndividualDiscount = individualDiscountProducts.contains(dto.productName);
+            
             result.add(dto);
+        }
+        
+        if (quote.Discount__c != null && quote.Discount__c > 0) {
+            Decimal totalRate = 0;
+            Decimal totalUnitPrice = 0;
+            Decimal totalAmount = 0;
+            Decimal totalTaxAmount = 0;
+            Decimal totalGrossAmount = 0;
+            
+            for (QuoteLineItemDTO item : result) {
+                if (item.rate != null) totalRate += item.rate;
+                if (item.unitPrice != null) totalUnitPrice += item.unitPrice;
+                if (item.amount != null) totalAmount += item.amount;
+                if (item.taxAmount != null) totalTaxAmount += item.taxAmount;
+                if (item.grossAmount != null) totalGrossAmount += item.grossAmount;
+            }
+            
+            Decimal discountRate = (totalRate * quote.Discount__c) / 100;
+            Decimal discountUnitPrice = (totalUnitPrice * quote.Discount__c) / 100;
+            Decimal discountAmountOnly = (totalAmount * quote.Discount__c) / 100;
+            Decimal discountTaxAmount = (totalTaxAmount * quote.Discount__c) / 100;
+            Decimal discountGrossAmount = (totalGrossAmount * quote.Discount__c) / 100;
+            
+            QuoteLineItemDTO discountDto = new QuoteLineItemDTO();
+            discountDto.salesforceId = null;
+            discountDto.quoteId = quoteId;
+            discountDto.productName = 'Discount (' + quote.Discount__c + '%)';
+            discountDto.location = 'Discount';
+            discountDto.productDescription = quote.Discount__c + '% discount on total amount';
+            discountDto.quantity = 1;
+            discountDto.rate = -discountRate;
+            discountDto.unitPrice = -discountUnitPrice;
+            discountDto.amount = -discountAmountOnly;
+            discountDto.taxAmount = -discountTaxAmount;
+            discountDto.grossAmount = -discountGrossAmount;
+            discountDto.productFamily = 'Discount';
+            discountDto.family = 'Discount';
+            result.add(discountDto);
         }
         
         return result;
     }
-
     
     @AuraEnabled
-    public static Boolean upsertQuoteLineItems(Object lineItemsData, Decimal discountPercent) {
+    public static Boolean upsertQuoteLineItems(Object lineItemsData, Decimal discountPercent, Decimal discountAmount) {
         try{
             System.debug('createQuoteLineItems called');
             List<Object> lineItemsObj = (List<Object>) JSON.deserializeUntyped(JSON.serialize(lineItemsData));
-
+            
             List<QuoteLineItemWrapper> lineItems = new List<QuoteLineItemWrapper>();
             System.debug('lineItemsObj ' + lineItemsObj);
+            
             for (Object item : lineItemsObj) {
                 Map<String, Object> itemMap = (Map<String, Object>) item;
                 QuoteLineItemWrapper wrapper = new QuoteLineItemWrapper();
                 wrapper.quoteLineItemId = (Id) itemMap.get('salesforceId');
                 wrapper.quoteId = (Id) itemMap.get('quoteId');
                 wrapper.location = (String) itemMap.get('location');
-                wrapper.productId = (Id) itemMap.get('productId');
+                Object productIdObj = itemMap.get('productId');
+                if (productIdObj != null && String.valueOf(productIdObj) != '' && String.valueOf(productIdObj) != 'null') {
+                    wrapper.productId = (Id) productIdObj;
+                } else {
+                    wrapper.productId = null;
+                }
+                
                 wrapper.productDescription = (String) itemMap.get('productDescription');
                 wrapper.netArea = itemMap.get('netArea') != null ? Decimal.valueOf(String.valueOf(itemMap.get('netArea'))) : null;
                 wrapper.wastage = itemMap.get('wastage') != null ? Decimal.valueOf(String.valueOf(itemMap.get('wastage'))) : null;
                 wrapper.length = (String) itemMap.get('length');
-                wrapper.width = (String) itemMap.get('width');
+                wrapper.width = String.valueOf(itemMap.get('width'));
                 wrapper.totalArea = itemMap.get('totalArea') != null ? Decimal.valueOf(String.valueOf(itemMap.get('totalArea'))) : null;
                 wrapper.rate = itemMap.get('rate') != null ? Decimal.valueOf(String.valueOf(itemMap.get('rate'))) : null;
                 wrapper.amount = itemMap.get('price') != null ? Decimal.valueOf(String.valueOf(itemMap.get('price'))) : null;
@@ -218,17 +133,22 @@ wrapper.grossProfit = relatedQuote != null ? relatedQuote.Gross_Profit__c : null
                 wrapper.discountId = (String) itemMap.get('discountId');
                 wrapper.rowId = (String) itemMap.get('rowId');
                 wrapper.units = (String) itemMap.get('units');
+                wrapper.itemType = (String) itemMap.get('type');
+                wrapper.isIndividualDiscount = (Boolean) itemMap.get('isIndividualDiscount');
+                
                 System.debug('units ' + wrapper.units);
                 lineItems.add(wrapper);
             }
+            
             system.debug('After for');
-            List<QuoteLineItem> quoteLineItemsToInsert = new List<QuoteLineItem>();
+            List<QuoteLineItem> quoteLineItemsToUpsert = new List<QuoteLineItem>();
             Map<String, QuoteLineItem> externalIdToSalesforceIdMap = new Map<String, QuoteLineItem>();
             Map<String, String> discountIdToRowIdMap = new Map<String, String>();
             Id quoteId;
+            
             Pricebook2 floorWorldPB = [SELECT Id FROM Pricebook2 WHERE Name = 'Floor World Price Book' AND IsActive = true LIMIT 1];
             system.debug('floorWorldPB ' + floorWorldPB);
-
+            
             Set<Id> productIds = new Set<Id>();
             for (QuoteLineItemWrapper item : lineItems) {
                 if (item.productId != null) {
@@ -247,18 +167,28 @@ wrapper.grossProfit = relatedQuote != null ? relatedQuote.Gross_Profit__c : null
                 productToPBEMap.put(pbe.Product2Id, pbe.Id);
             }
             
+            List<QuoteLineItemWrapper> itemsToProcess = new List<QuoteLineItemWrapper>();
             for (QuoteLineItemWrapper item : lineItems) {
+                if (!(item.location == 'Discount' && item.itemType == 'Discount')) {
+                    itemsToProcess.add(item);
+                }
+            }
+            
+            for (QuoteLineItemWrapper item : itemsToProcess) {
                 QuoteLineItem qli = new QuoteLineItem();
                 qli.Id = item.quoteLineItemId;
+                
                 if(item.quoteLineItemId == null){
                     qli.QuoteId = item.quoteId;
                     qli.Product2Id = item.productId;
                     qli.PricebookEntryId = productToPBEMap.get(item.productId);
                 }
+                
                 quoteId = item.quoteId;
                 qli.Location__c = item.location;
                 qli.Net_Area_SQM_LM__c = item.netArea;
                 qli.Date__c = Date.today();
+                
                 Decimal clientWastage = item.wastage != null ? item.wastage : 0;
                 qli.Wastage__c = clientWastage;
                 
@@ -275,47 +205,66 @@ wrapper.grossProfit = relatedQuote != null ? relatedQuote.Gross_Profit__c : null
                 qli.Width_m__c = (item.width != null && item.width != '') ? Decimal.valueOf(item.width) : null;
                 qli.Total_Area__c = (item.totalArea != null) ? item.totalArea : null;
                 qli.Unit__c = item.units;
+                
                 System.debug('qli.Unit__c ' + qli.Unit__c);
+                System.debug('Item Type: ' + item.itemType);
+                System.debug('Is Individual Discount: ' + item.isIndividualDiscount);
+                
                 if(item.rowId != null){
                     externalIdToSalesforceIdMap.put(item.rowId, qli);
                 }
                 if(item.discountId != null){
                     discountIdToRowIdMap.put(item.discountId, item.rowId);
                 }
+                
                 System.debug('qli'+qli);
-                quoteLineItemsToInsert.add(qli);
+                quoteLineItemsToUpsert.add(qli);
             }
             
-            if (!quoteLineItemsToInsert.isEmpty()) {
-                Database.upsert(quoteLineItemsToInsert,true);
-                return true;
-                /*ist<QuoteLineItem> quoteLineItemsToUpdate = new List<QuoteLineItem>();
-                for(String discountIds : discountIdToRowIdMap.keyset()){
-                    if(discountIdToRowIdMap.get(discountIds) != null){
-                        QuoteLineItem qli = externalIdToSalesforceIdMap.get(discountIdToRowIdMap.get(discountIds));
-                        QuoteLineItem discountQli =  externalIdToSalesforceIdMap.get(discountIds);
-                        if(qli != null){
-                            quoteLineItemsToUpdate.add(qli);
-                        }
-                    }
-                }
-                if (!quoteLineItemsToUpdate.isEmpty()) {
-                    update quoteLineItemsToUpdate;
-                }*/
+            if (!quoteLineItemsToUpsert.isEmpty()) {
+                Database.upsert(quoteLineItemsToUpsert, true);
             }
-            return false;
-
-            /*if(discountPercent != null && discountPercent > 0){
-                Quote quot = new Quote();
-                quot.Id = quoteId;
-                update quot;
-            }else{
-                calculateQuoteDiscount([SELECT Id, QuoteId, TotalPrice, Discount from QuoteLineItem Where QuoteId =: quoteId]);
-            }*/
-        }catch (Exception ex) {
+            
+            if(discountPercent != null && discountPercent > 0 && discountAmount != null && discountAmount > 0){
+                Quote quoteToUpdate = new Quote();
+                quoteToUpdate.Id = quoteId;
+                quoteToUpdate.Discount__c = discountPercent;
+                quoteToUpdate.Discounted_Amount__c = discountAmount; 
+                
+                update quoteToUpdate;
+                System.debug('Quote updated with discount: ' + discountPercent + '% and amount: ' + discountAmount);
+            } else if (discountPercent == null || discountPercent == 0) {
+                Quote quoteToUpdate = new Quote();
+                quoteToUpdate.Id = quoteId;
+                quoteToUpdate.Discount__c = null;
+                quoteToUpdate.Discounted_Amount__c = null;
+                
+                update quoteToUpdate;
+                System.debug('Quote discount cleared');
+            }
+            
+            return true;
+            
+        } catch (Exception ex) {
             System.debug('Error in createQuoteLineItems: ' + ex.getMessage() + ' - ' +  ex.getLineNumber());
             throw new AuraHandledException('Error while creating Quote Line Items: ' + ex.getMessage());
         }
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static List<PricebookEntry> searchProductItems(String searchKey) {
+        Pricebook2 pb = [SELECT Id FROM Pricebook2 WHERE Name = 'Floor World Price Book' AND IsActive = true LIMIT 1];
+        
+        if (pb == null) {
+            return new List<PricebookEntry>();
+        }
+        
+        String query = '%' + searchKey + '%';
+        
+        return [SELECT Product2.Name, Product2.ProductCode, UnitPrice, Product2.Description, Product2.Family, Product2.Primary_Sale_Unit__c, Product2.Width_m__c,
+                Product2.Average_Cost__c, Id
+                FROM PricebookEntry 
+                WHERE Pricebook2.Id =: pb.Id AND Product2.Name LIKE :query AND IsActive = true LIMIT 10];
     }
     
     public class QuoteLineItemWrapper {
@@ -340,108 +289,8 @@ wrapper.grossProfit = relatedQuote != null ? relatedQuote.Gross_Profit__c : null
         public String discountId;
         public String rowId;
         public String units;
-    }
-    
-    public static void calculateQuoteDiscount(List<QuoteLineItem> quoteLineItems) {
-        
-        Map<Id, Decimal> totalAmountsByQuote = new Map<Id, Decimal>();
-        Map<Id, Decimal> weightedDiscountsByQuote = new Map<Id, Decimal>();
-        
-        for (QuoteLineItem qli : quoteLineItems) {
-            if (qli.QuoteId != null) {
-                
-                if (!totalAmountsByQuote.containsKey(qli.QuoteId)) {
-                    totalAmountsByQuote.put(qli.QuoteId, 0);
-                    weightedDiscountsByQuote.put(qli.QuoteId, 0);
-                }
-                
-                totalAmountsByQuote.put(qli.QuoteId, totalAmountsByQuote.get(qli.QuoteId) + qli.TotalPrice);
-                
-                if (qli.Discount != null && qli.Discount > 0) {
-                    weightedDiscountsByQuote.put(qli.QuoteId, 
-                                                 weightedDiscountsByQuote.get(qli.QuoteId) + (qli.Discount * qli.TotalPrice));
-                }
-            }
-        }
-        
-        Map<Id, Decimal> quoteDiscounts = new Map<Id, Decimal>();
-        for (Id quoteId : totalAmountsByQuote.keySet()) {
-            Decimal totalAmount = totalAmountsByQuote.get(quoteId);
-            Decimal weightedDiscount = weightedDiscountsByQuote.get(quoteId);
-            
-            if (totalAmount > 0) {
-                quoteDiscounts.put(quoteId, totalAmount > 0 ? (weightedDiscount / totalAmount).setScale(2, RoundingMode.HALF_UP) : 0);
-            } else {
-                quoteDiscounts.put(quoteId, 0);
-            }
-        }
-        
-        List<Quote> quotesToUpdate = new List<Quote>();
-        for (Id quoteId : quoteDiscounts.keySet()) {
-            quotesToUpdate.add(new Quote(
-                Id = quoteId
-                //Custom_Discount__c = quoteDiscounts.get(quoteId) 
-            ));
-        }
-        
-        if (!quotesToUpdate.isEmpty()) {
-            update quotesToUpdate;
-        }
-    }
-    
-    public static void updateCPOnQuote(List<QuoteLineItem> qutLine){
-        Set<Id> quotesId = new Set<Id>();
-        
-        for (QuoteLineItem li : qutLine) {
-            if(li.QuoteId != null){
-                quotesId.add(li.QuoteId);
-            }
-        }
-        
-        Map<Id, Decimal> quoteTotalsMap = new Map<Id, Decimal>();
-        
-        for (QuoteLineItem qli : [SELECT Id, QuoteId,Quote.Discount, Quantity FROM QuoteLineItem WHERE QuoteId IN :quotesId]) {
-            Decimal total = 0;//qli.Cost_Prize__c;
-            
-            if (!quoteTotalsMap.containsKey(qli.QuoteId)) {
-                quoteTotalsMap.put(qli.QuoteId, 0);
-            }
-            
-            quoteTotalsMap.put(qli.QuoteId, quoteTotalsMap.get(qli.QuoteId) + total);
-        }
-        
-        
-        List<Quote> quotesToUpdate = new List<Quote>();
-        
-        for(Id qutId : quotesId){
-            if(quoteTotalsMap.containsKey(qutId)){
-                quotesToUpdate.add(new Quote(
-                    Id = qutId
-                    //Cost_Prize__c = quoteTotalsMap.get(qutId)
-                ));
-            }
-        }
-        
-        if (!quotesToUpdate.isEmpty()) {
-            update quotesToUpdate;
-        }
-        
-    }
-    
-    @AuraEnabled(cacheable=true)
-    public static List<PricebookEntry> searchProductItems(String searchKey) {
-        Pricebook2 pb = [SELECT Id FROM Pricebook2 WHERE Name = 'Floor World Price Book' AND IsActive = true LIMIT 1];
-        
-        if (pb == null) {
-            return new List<PricebookEntry>();
-        }
-        
-        String query = '%' + searchKey + '%';
-        
-        return [SELECT Product2.Name, Product2.ProductCode, UnitPrice, Product2.Description, Product2.Family, Product2.Primary_Sale_Unit__c, Product2.Width_m__c
-                //Product2.Area_Per_Box__c, Product2.Width__c, Cost_Prize__c
-                FROM PricebookEntry 
-                WHERE Pricebook2.Id =: pb.Id AND Name LIKE :query LIMIT 10];
+        public String itemType;
+        public Boolean isIndividualDiscount;
     }
     
     public class QuoteLineItemDTO {
@@ -453,6 +302,8 @@ wrapper.grossProfit = relatedQuote != null ? relatedQuote.Gross_Profit__c : null
         public String productName { get; set; }
         @AuraEnabled
         public String productFamily { get; set; }
+        @AuraEnabled
+        public String family { get; set; }
         @AuraEnabled
         public String location { get; set; }
         @AuraEnabled
@@ -499,7 +350,11 @@ wrapper.grossProfit = relatedQuote != null ? relatedQuote.Gross_Profit__c : null
         public Decimal costPrice { get; set; }
         @AuraEnabled
         public String type { get; set; }
-        
+        @AuraEnabled
+        public Boolean isIndividualDiscount { get; set; }
+        @AuraEnabled
+        public Decimal averageCost { get; set; }
+        @AuraEnabled
+        public Decimal estExtendedCost { get; set; }
     }
-    
 }
