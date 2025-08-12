@@ -65,7 +65,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
                 const overallDiscount = discountRows.find(row => row.location === 'Discount');
                 if (overallDiscount && overallDiscount.itemInput) {
-                    const match = overallDiscount.itemInput.match(/(\d+)%/);
+                    const match = overallDiscount.itemInput.match(/(\d+(?:\.\d+)?)%/);
                     if (match) {
                         this.rate = match[1];
                         this.selectedDiscount = match[1];
@@ -115,8 +115,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             netAreaDisable: false,
             wastageDisable: true,
             lengthDisable: false,
-            individualDiscountRow: null, 
-            discountAppliedFromRow: null 
+            individualDiscountRow: null,
+            discountAppliedFromRow: null
         };
     }
 
@@ -144,8 +144,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             taxAmount: this.safeToString(item.taxAmount),
             grossAmount: this.safeToString(item.grossAmount),
             estExtendedCost: this.safeToString(item.estExtendedCost),
-            costEstimateType: 'Custom',
-            estimateType: item.estimateType || '',
+            costEstimateType: item.location === 'Discount' ? 'Discount' : 'Custom',
+            estimateType: item.location === 'Discount' ? 'Discount' : 'Custom',
             family: item.family || '',
             selectedItemId: item.productId,
             averageCost: this.safeToString(item.averageCost),
@@ -195,16 +195,18 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
             if (discountRate > 0) {
                 this.addOverallDiscountRow(discountRate);
+                this.showToast('Success', `${discountRate}% overall discount applied successfully!`, 'success');
+
             }
         } else {
             this.removeOverallDiscountRow();
         }
+
     }
 
     addOverallDiscountRow(discountRate) {
         const eligibleRows = this.tableData.filter(row =>
-            row.family !== DISCOUNT_FAMILY &&
-            !INDIVIDUAL_DISCOUNT_PRODUCTS.includes(row.itemInput)
+            !(row.family === DISCOUNT_FAMILY && row.location === 'Discount')
         );
 
         const totalGrossAmount = eligibleRows.reduce((total, row) =>
@@ -228,7 +230,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         const discountRow = this.createOverallDiscountRow(discountRate, totalGrossAmount, totalRate, unitPriceSub, amount, taxAmount);
 
         this.tableData = [...this.tableData, discountRow];
-        this.showToast('Success', `${discountRate}% overall discount applied successfully!`, 'success');
     }
 
     removeOverallDiscountRow() {
@@ -316,6 +317,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     recalculateOverallDiscount() {
         if (this.rate && this.rate !== '') {
             this.addOverallDiscountRow(this.safeParseFloat(this.rate));
+            this.showToast('Success', `${discountRate}% overall discount applied successfully!`, 'success');
+
         }
     }
 
@@ -632,6 +635,12 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         }
 
         this.tableData = [...this.tableData];
+
+        setTimeout(() => {
+            if (this.rate && this.rate !== '') {
+                this.recalculateOverallDiscount();
+            }
+        }, 100);
     }
 
     handleCancel() {
@@ -713,7 +722,9 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         const dataObj = this.buildQuoteLineItems();
         console.log('dataObj ', JSON.stringify(dataObj));
         const totalDiscountAmount = this.calculateOverallDiscountAmount();
+        console.log('totalDiscountAmount ', totalDiscountAmount);
         const discountPercent = this.safeParseFloat(this.rate);
+        console.log('discountPercent ', discountPercent);
 
         try {
             await upsertQuoteLineItems({
@@ -761,8 +772,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
     calculateOverallDiscountAmount() {
         return this.tableData
-            .filter(row => row.family === DISCOUNT_FAMILY && row.location === 'Discount' && row.amount)
-            .reduce((total, row) => total + Math.abs(this.safeParseFloat(row.amount)), 0);
+            .filter(row => row.family === DISCOUNT_FAMILY && row.location === 'Discount' && row.grossAmount)
+            .reduce((total, row) => total + Math.abs(this.safeParseFloat(row.grossAmount)), 0);
     }
 
     showToast(title, message, variant, mode = 'dismissable') {
