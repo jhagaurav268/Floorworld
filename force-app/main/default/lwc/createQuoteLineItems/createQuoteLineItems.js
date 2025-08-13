@@ -118,7 +118,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             lengthDisable: false,
             individualDiscountRow: null,
             discountAppliedFromRow: null,
-            productNameDisabled: false
+            productNameDisabled: false,
+            rowNumber: null
         };
     }
 
@@ -162,7 +163,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             lengthDisable: isDecking,
             individualDiscountRow: null,
             discountAppliedFromRow: null,
-            productNameDisabled: true
+            productNameDisabled: true,
+            rowNumber: item.rowNumber
         };
     }
 
@@ -265,7 +267,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             editmode: false,
             readmode: true,
             netAreaDisable: true,
-            lengthDisable: true
+            lengthDisable: true,
+            rowNumber: 9999 // Always at the end
         };
     }
 
@@ -320,7 +323,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     recalculateOverallDiscount() {
         if (this.rate && this.rate !== '') {
             this.addOverallDiscountRow(this.safeParseFloat(this.rate));
-            this.showToast('Success', `${this.rate}% overall discount applied successfully!`, 'success');
         }
     }
 
@@ -669,8 +671,22 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     handleInsert() {
         if (this.selectedRowIndex === -1) return;
 
-        const newRow = this.createNewRow();
+        // Check if next row is an individual discount product
+        const nextRow = this.tableData[this.selectedRowIndex + 1];
+        if (nextRow && INDIVIDUAL_DISCOUNT_PRODUCTS.includes(nextRow.itemInput)) {
+            // Remove the discount row since it will no longer be associated
+            if (nextRow.salesforceId) {
+                this.deletedRowIds = [...this.deletedRowIds, nextRow.salesforceId];
+            }
+            
+            // Remove the discount row from table data
+            this.tableData = [
+                ...this.tableData.slice(0, this.selectedRowIndex + 1),
+                ...this.tableData.slice(this.selectedRowIndex + 2)
+            ];
+        }
 
+        const newRow = this.createNewRow();
         let insertIndex = this.selectedRowIndex + 1;
 
         const overallDiscountIndex = this.tableData.findIndex(row =>
@@ -689,6 +705,12 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
         this.selectedRowIndex = insertIndex;
         this.copyOfSelectedRow = JSON.parse(JSON.stringify(newRow));
+
+        // Recalculate discounts after insertion
+        setTimeout(() => {
+            this.recalculateOverallDiscount();
+            this.recalculateIndividualDiscounts();
+        }, 100);
     }
 
     handleRemove() {
@@ -706,6 +728,23 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             !INDIVIDUAL_DISCOUNT_PRODUCTS.includes(selectedRow.itemInput)) {
             this.showToast('Error', 'Please remove the discount from this product first.', 'error');
             return;
+        }
+
+        // If removing a row that has an individual discount applied, also remove the discount
+        if (selectedRow.individualDiscountRow) {
+            const discountRowIndex = this.tableData.findIndex(row => row.id === selectedRow.individualDiscountRow);
+            if (discountRowIndex !== -1) {
+                const discountRow = this.tableData[discountRowIndex];
+                if (discountRow.salesforceId) {
+                    this.deletedRowIds = [...this.deletedRowIds, discountRow.salesforceId];
+                }
+                this.tableData.splice(discountRowIndex, 1);
+                
+                // Adjust selectedRowIndex if discount was removed before selected row
+                if (discountRowIndex < this.selectedRowIndex) {
+                    this.selectedRowIndex--;
+                }
+            }
         }
 
         if (selectedRow.family === DISCOUNT_FAMILY && selectedRow.location === 'Discount') {
@@ -743,6 +782,9 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     }
 
     async createQuoteLineItemData() {
+        // Assign row numbers before saving
+        this.assignRowNumbers();
+        
         const dataObj = this.buildQuoteLineItems();
         console.log('dataObj ', JSON.stringify(dataObj));
         const totalDiscountAmount = this.calculateOverallDiscountAmount();
@@ -758,9 +800,32 @@ export default class FloorWorldCarpetSolution extends LightningElement {
                 deletedRowIds: this.deletedRowIds
             });
             this.showToast('Success', 'Quote Line Items saved successfully!', 'success');
+            // Clear deleted row IDs after successful save
+            this.deletedRowIds = [];
         } catch (error) {
             throw new Error(error.body?.message || 'Failed to save items');
         }
+    }
+
+    assignRowNumbers() {
+        let rowNumber = 1;
+        
+        // Filter out overall discount rows for numbering
+        const nonOverallDiscountRows = this.tableData.filter(row => 
+            !(row.family === DISCOUNT_FAMILY && row.location === 'Discount')
+        );
+        
+        // Assign row numbers to non-overall-discount rows
+        nonOverallDiscountRows.forEach(row => {
+            row.rowNumber = rowNumber++;
+        });
+        
+        // Overall discount rows get the highest number to appear at the end
+        this.tableData.forEach(row => {
+            if (row.family === DISCOUNT_FAMILY && row.location === 'Discount') {
+                row.rowNumber = 9999;
+            }
+        });
     }
 
     buildQuoteLineItems() {
@@ -791,7 +856,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             type: product.family || '',
             isIndividualDiscount: INDIVIDUAL_DISCOUNT_PRODUCTS.includes(product.itemInput),
             discountAppliedFromRow: product.discountAppliedFromRow || null,
-            individualDiscountRow: product.individualDiscountRow || null
+            individualDiscountRow: product.individualDiscountRow || null,
+            rowNumber: product.rowNumber
         }));
     }
 

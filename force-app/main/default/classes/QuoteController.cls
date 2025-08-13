@@ -14,10 +14,11 @@ public class QuoteController {
         List<QuoteLineItem> qlis = [
             SELECT Id, QuoteId, Product2Id, Product2.Name, Description, Quantity, UnitPrice, Product2.Family,
             Location__c, Net_Area_SQM_LM__c, Wastage__c, Rate__c, Quantity_SQM__c,
-            Discount, Length_m__c, Width_m__c, Total_Area__c, Unit__c, Date__c, Gross_Amount__c, Tax_Amount__c, Amount__c
+            Discount, Length_m__c, Width_m__c, Total_Area__c, Unit__c, Date__c, Gross_Amount__c, Tax_Amount__c, Amount__c,
+            Row_Number__c
             FROM QuoteLineItem
             WHERE QuoteId = :quoteId
-            ORDER BY CreatedDate ASC
+            ORDER BY Row_Number__c ASC NULLS LAST, CreatedDate ASC
         ];
         
         for (QuoteLineItem qli : qlis) {
@@ -46,6 +47,7 @@ public class QuoteController {
             dto.taxAmount = qli.Tax_Amount__c;
             dto.grossAmount = qli.Gross_Amount__c;
             dto.productFamily = qli.Product2 != null ? qli.Product2.Family : '';
+            dto.rowNumber = qli.Row_Number__c != null ? Integer.valueOf(qli.Row_Number__c) : null;
             
             List<String> individualDiscountProducts = new List<String>{'5% Discount', '10% Discount', '15% Discount', '20% Discount'};
             dto.isIndividualDiscount = individualDiscountProducts.contains(dto.productName);
@@ -88,6 +90,7 @@ public class QuoteController {
             discountDto.grossAmount = -discountGrossAmount;
             discountDto.productFamily = 'Discount';
             discountDto.family = 'Discount';
+            discountDto.rowNumber = 9999; // Always at the end
             result.add(discountDto);
         }
         
@@ -143,6 +146,7 @@ public class QuoteController {
                 wrapper.units = (String) itemMap.get('units');
                 wrapper.itemType = (String) itemMap.get('type');
                 wrapper.isIndividualDiscount = (Boolean) itemMap.get('isIndividualDiscount');
+                wrapper.rowNumber = itemMap.get('rowNumber') != null ? Integer.valueOf(String.valueOf(itemMap.get('rowNumber'))) : null;
                 
                 System.debug('units ' + wrapper.units);
                 lineItems.add(wrapper);
@@ -196,6 +200,7 @@ public class QuoteController {
                 qli.Location__c = item.location;
                 qli.Net_Area_SQM_LM__c = item.netArea;
                 qli.Date__c = Date.today();
+                qli.Row_Number__c = item.rowNumber;
                 
                 Decimal clientWastage = item.wastage != null ? item.wastage : 0;
                 qli.Wastage__c = clientWastage;
@@ -299,6 +304,7 @@ public class QuoteController {
         public String units;
         public String itemType;
         public Boolean isIndividualDiscount;
+        public Integer rowNumber;
     }
     
     public class QuoteLineItemDTO {
@@ -364,5 +370,7 @@ public class QuoteController {
         public Decimal averageCost { get; set; }
         @AuraEnabled
         public Decimal estExtendedCost { get; set; }
+        @AuraEnabled
+        public Integer rowNumber { get; set; }
     }
 }
