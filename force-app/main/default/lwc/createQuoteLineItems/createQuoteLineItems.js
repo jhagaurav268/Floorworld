@@ -317,8 +317,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     recalculateOverallDiscount() {
         if (this.rate && this.rate !== '') {
             this.addOverallDiscountRow(this.safeParseFloat(this.rate));
-            this.showToast('Success', `${discountRate}% overall discount applied successfully!`, 'success');
-
+            this.showToast('Success', `${this.rate}% overall discount applied successfully!`, 'success');
         }
     }
 
@@ -541,6 +540,16 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         const row = { ...this.tableData[rowIndex] };
         const productData = product.Product2;
 
+        if (INDIVIDUAL_DISCOUNT_PRODUCTS.includes(productData.Name)) {
+            const prevRow = this.tableData[rowIndex - 1];
+            const nextRow = this.tableData[rowIndex + 1];
+
+            if ((prevRow && INDIVIDUAL_DISCOUNT_PRODUCTS.includes(prevRow.itemInput)) || (nextRow && INDIVIDUAL_DISCOUNT_PRODUCTS.includes(nextRow.itemInput))) {
+                this.showToast('Error', 'Cannot apply consecutive discounts.', 'error');
+                return;
+            }
+        }
+
         Object.assign(row, {
             itemInput: productData.Name,
             description: productData.Description || '',
@@ -680,9 +689,17 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     }
 
     handleRemove() {
-        if (this.selectedRowIndex <= 0 || this.tableData.length <= 1) return;
+        if (this.selectedRowIndex === -1 || this.tableData.length === 1) return;
 
         const selectedRow = this.tableData[this.selectedRowIndex];
+        const nextRow = this.tableData[this.selectedRowIndex + 1];
+
+        if (nextRow &&
+            INDIVIDUAL_DISCOUNT_PRODUCTS.includes(nextRow.itemInput) &&
+            !INDIVIDUAL_DISCOUNT_PRODUCTS.includes(selectedRow.itemInput)) {
+            this.showToast('Error', 'Please remove the discount from this product first.', 'error');
+            return;
+        }
 
         if (selectedRow.family === DISCOUNT_FAMILY && selectedRow.location === 'Discount') {
             this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
