@@ -95,9 +95,17 @@ public class QuoteController {
     }
     
     @AuraEnabled
-    public static Boolean upsertQuoteLineItems(Object lineItemsData, Decimal discountPercent, Decimal discountAmount) {
+    public static Boolean upsertQuoteLineItems(Object lineItemsData, Decimal discountPercent, Decimal discountAmount, List<String> deletedRowIds) {
         try{
             System.debug('createQuoteLineItems called');
+            if (deletedRowIds != null && !deletedRowIds.isEmpty()) {
+                List<QuoteLineItem> itemsToDelete = [
+                    SELECT Id FROM QuoteLineItem 
+                    WHERE Id IN :deletedRowIds
+                ];
+                delete itemsToDelete;
+            }
+
             List<Object> lineItemsObj = (List<Object>) JSON.deserializeUntyped(JSON.serialize(lineItemsData));
             
             List<QuoteLineItemWrapper> lineItems = new List<QuoteLineItemWrapper>();

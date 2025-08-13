@@ -21,6 +21,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     @track rate = '';
     @track filteredProducts = [];
     @track selectedRowIndex = -1;
+    @track deletedRowIds = [];
 
     rowId = 1;
     copyOfSelectedRow = null;
@@ -694,6 +695,10 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         const selectedRow = this.tableData[this.selectedRowIndex];
         const nextRow = this.tableData[this.selectedRowIndex + 1];
 
+        if (selectedRow.salesforceId) {
+            this.deletedRowIds = [...this.deletedRowIds, selectedRow.salesforceId];
+        }
+
         if (nextRow &&
             INDIVIDUAL_DISCOUNT_PRODUCTS.includes(nextRow.itemInput) &&
             !INDIVIDUAL_DISCOUNT_PRODUCTS.includes(selectedRow.itemInput)) {
@@ -747,7 +752,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             await upsertQuoteLineItems({
                 lineItemsData: dataObj,
                 discountPercent,
-                discountAmount: totalDiscountAmount
+                discountAmount: totalDiscountAmount,
+                deletedRowIds: this.deletedRowIds
             });
             this.showToast('Success', 'Quote Line Items saved successfully!', 'success');
         } catch (error) {
