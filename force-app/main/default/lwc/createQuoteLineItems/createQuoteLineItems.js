@@ -117,7 +117,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             wastageDisable: true,
             lengthDisable: false,
             individualDiscountRow: null,
-            discountAppliedFromRow: null
+            discountAppliedFromRow: null,
+            productNameDisabled: false
         };
     }
 
@@ -160,7 +161,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             wastageDisable: true,
             lengthDisable: isDecking,
             individualDiscountRow: null,
-            discountAppliedFromRow: null
+            discountAppliedFromRow: null,
+            productNameDisabled: true
         };
     }
 

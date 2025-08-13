@@ -10,7 +10,7 @@
                     onchange={handleDiscountChange}>
                 </lightning-combobox>
                 <lightning-input style="width:7%" label="Custom Discount" type="number" value={rate}
-                    onchange={handleRateChange}>
+                    onblur={handleRateChange}>
                 </lightning-input>
             </div>
 
@@ -52,7 +52,7 @@
                                         <!-- Input field for lookup-like behavior -->
                                         <lightning-input class="wide-column" data-id={row.id} data-field="item"
                                             value={row.itemInput} onchange={handleSearchChange} onfocus={handleFocus}
-                                            onblur={handleBlur}>
+                                            onblur={handleBlur} disabled={row.productNameDisabled}>
                                         </lightning-input>
 
                                         <template if:true={row.isSuggestionsVisible}>
