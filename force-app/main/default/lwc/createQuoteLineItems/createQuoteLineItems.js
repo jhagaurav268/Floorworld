@@ -678,7 +678,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             if (nextRow.salesforceId) {
                 this.deletedRowIds = [...this.deletedRowIds, nextRow.salesforceId];
             }
-            
+
             // Remove the discount row from table data
             this.tableData = [
                 ...this.tableData.slice(0, this.selectedRowIndex + 1),
@@ -722,6 +722,11 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         if (selectedRow.salesforceId) {
             this.deletedRowIds = [...this.deletedRowIds, selectedRow.salesforceId];
         }
+        setTimeout(() => {
+            this.recalculateOverallDiscount();
+            this.recalculateIndividualDiscounts();
+        }, 100);
+
 
         if (nextRow &&
             INDIVIDUAL_DISCOUNT_PRODUCTS.includes(nextRow.itemInput) &&
@@ -739,7 +744,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
                     this.deletedRowIds = [...this.deletedRowIds, discountRow.salesforceId];
                 }
                 this.tableData.splice(discountRowIndex, 1);
-                
+
                 // Adjust selectedRowIndex if discount was removed before selected row
                 if (discountRowIndex < this.selectedRowIndex) {
                     this.selectedRowIndex--;
@@ -764,10 +769,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
         this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
 
-        setTimeout(() => {
-            this.recalculateOverallDiscount();
-            this.recalculateIndividualDiscounts();
-        }, 100);
     }
 
     async handleSave() {
@@ -784,7 +785,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     async createQuoteLineItemData() {
         // Assign row numbers before saving
         this.assignRowNumbers();
-        
+
         const dataObj = this.buildQuoteLineItems();
         console.log('dataObj ', JSON.stringify(dataObj));
         const totalDiscountAmount = this.calculateOverallDiscountAmount();
@@ -809,17 +810,17 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
     assignRowNumbers() {
         let rowNumber = 1;
-        
+
         // Filter out overall discount rows for numbering
-        const nonOverallDiscountRows = this.tableData.filter(row => 
+        const nonOverallDiscountRows = this.tableData.filter(row =>
             !(row.family === DISCOUNT_FAMILY && row.location === 'Discount')
         );
-        
+
         // Assign row numbers to non-overall-discount rows
         nonOverallDiscountRows.forEach(row => {
             row.rowNumber = rowNumber++;
         });
-        
+
         // Overall discount rows get the highest number to appear at the end
         this.tableData.forEach(row => {
             if (row.family === DISCOUNT_FAMILY && row.location === 'Discount') {
