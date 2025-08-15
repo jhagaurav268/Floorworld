@@ -98,7 +98,7 @@ public class QuoteController {
     }
     
     @AuraEnabled
-    public static Boolean upsertQuoteLineItems(Object lineItemsData, Decimal discountPercent, Decimal discountAmount, List<String> deletedRowIds) {
+    public static Map<String, String> upsertQuoteLineItems(Object lineItemsData, Decimal discountPercent, Decimal discountAmount, List<String> deletedRowIds) {
         try{
             System.debug('createQuoteLineItems called');
             if (deletedRowIds != null && !deletedRowIds.isEmpty()) {
@@ -149,6 +149,7 @@ public class QuoteController {
                 wrapper.rowNumber = itemMap.get('rowNumber') != null ? Integer.valueOf(String.valueOf(itemMap.get('rowNumber'))) : null;
                 
                 System.debug('units ' + wrapper.units);
+                System.debug('rowId from frontend: ' + wrapper.rowId); // Debug line
                 lineItems.add(wrapper);
             }
             
@@ -156,6 +157,8 @@ public class QuoteController {
             List<QuoteLineItem> quoteLineItemsToUpsert = new List<QuoteLineItem>();
             Map<String, QuoteLineItem> externalIdToSalesforceIdMap = new Map<String, QuoteLineItem>();
             Map<String, String> discountIdToRowIdMap = new Map<String, String>();
+            // Move this declaration up and initialize here
+            Map<String, QuoteLineItem> rowIdToQliMap = new Map<String, QuoteLineItem>();
             Id quoteId;
             
             Pricebook2 floorWorldPB = [SELECT Id FROM Pricebook2 WHERE Name = 'Floor World Price Book' AND IsActive = true LIMIT 1];
@@ -223,8 +226,11 @@ public class QuoteController {
                 System.debug('Item Type: ' + item.itemType);
                 System.debug('Is Individual Discount: ' + item.isIndividualDiscount);
                 
+                // FIX: Add to both maps
                 if(item.rowId != null){
                     externalIdToSalesforceIdMap.put(item.rowId, qli);
+                    rowIdToQliMap.put(item.rowId, qli); // This was missing!
+                    System.debug('Added to rowIdToQliMap: ' + item.rowId); // Debug line
                 }
                 if(item.discountId != null){
                     discountIdToRowIdMap.put(item.discountId, item.rowId);
@@ -234,9 +240,13 @@ public class QuoteController {
                 quoteLineItemsToUpsert.add(qli);
             }
             
+            System.debug('Before upsert - rowIdToQliMap size: ' + rowIdToQliMap.size()); // Debug line
+            
             if (!quoteLineItemsToUpsert.isEmpty()) {
                 Database.upsert(quoteLineItemsToUpsert, true);
             }
+            
+            System.debug('After upsert - rowIdToQliMap size: ' + rowIdToQliMap.size()); // Debug line
             
             if(discountPercent != null && discountPercent > 0 && discountAmount != null && discountAmount > 0){
                 Quote quoteToUpdate = new Quote();
@@ -256,7 +266,20 @@ public class QuoteController {
                 System.debug('Quote discount cleared');
             }
             
-            return true;
+            // Prepare return map with rowId to salesforceId mapping
+            Map<String, String> rowIdToSalesforceIdMap = new Map<String, String>();
+            for (String rowId : rowIdToQliMap.keySet()) {
+                QuoteLineItem qli = rowIdToQliMap.get(rowId);
+                if (qli.Id != null) {
+                    rowIdToSalesforceIdMap.put(rowId, qli.Id);
+                    System.debug('Mapping rowId: ' + rowId + ' to salesforceId: ' + qli.Id); // Debug line
+                } else {
+                    System.debug('QuoteLineItem ID is null for rowId: ' + rowId); // Debug line
+                }
+            }
+            
+            System.debug('Final rowIdToSalesforceIdMap: ' + rowIdToSalesforceIdMap);
+            return rowIdToSalesforceIdMap;
             
         } catch (Exception ex) {
             System.debug('Error in createQuoteLineItems: ' + ex.getMessage() + ' - ' +  ex.getLineNumber());

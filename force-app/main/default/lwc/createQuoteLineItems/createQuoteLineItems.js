@@ -791,12 +791,16 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         const discountPercent = this.safeParseFloat(this.rate);
 
         try {
-            await upsertQuoteLineItems({
+            const rowIdToSalesforceIdMap = await upsertQuoteLineItems({
                 lineItemsData: dataObj,
                 discountPercent,
                 discountAmount: totalDiscountAmount,
                 deletedRowIds: this.deletedRowIds
             });
+            if (rowIdToSalesforceIdMap != null) {
+                this.updateLocalDataWithSalesforceIds(rowIdToSalesforceIdMap);
+            }
+
             this.showToast('Success', 'Quote Line Items saved successfully!', 'success');
             // Clear deleted row IDs after successful save
             this.deletedRowIds = [];
@@ -804,6 +808,28 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             throw new Error(error.body?.message || 'Failed to save items');
         }
     }
+
+    updateLocalDataWithSalesforceIds(rowIdToSalesforceIdMap) {
+        console.log('updateLocalDataWithSalesforceIds ', JSON.stringify(rowIdToSalesforceIdMap));
+        if (!rowIdToSalesforceIdMap || Object.keys(rowIdToSalesforceIdMap).length === 0) {
+            return;
+        }
+
+        this.tableData = this.tableData.map(row => {
+            const rowIdString = row.id.toString();
+
+            if (rowIdToSalesforceIdMap[rowIdString]) {
+                return {
+                    ...row,
+                    salesforceId: rowIdToSalesforceIdMap[rowIdString]
+                };
+            }
+            return row;
+        });
+
+        console.log('Updated tableData with Salesforce IDs:', this.tableData);
+    }
+
 
     assignRowNumbers() {
         let rowNumber = 1;
