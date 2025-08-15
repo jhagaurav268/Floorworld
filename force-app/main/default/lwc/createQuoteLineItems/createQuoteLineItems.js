@@ -189,14 +189,12 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
     handleRateChange(event) {
         this.rate = event.target.value;
-        console.log('this.rate ', this.rate);
         this.applyOverallDiscount();
     }
 
     applyOverallDiscount() {
         if (this.rate && this.rate !== '') {
             const discountRate = this.safeParseFloat(this.rate);
-            console.log('discountRate ', discountRate);
 
             if (discountRate > 0) {
                 this.addOverallDiscountRow(discountRate);
@@ -637,6 +635,24 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
         const selectedRow = this.tableData[this.selectedRowIndex];
         const isEditMode = selectedRow.editmode;
+        const nextRow = this.tableData[this.selectedRowIndex + 1];
+        const nextRowIndex = this.selectedRowIndex + 1;
+
+        if (nextRow && INDIVIDUAL_DISCOUNT_PRODUCTS.includes(nextRow.itemInput) && this.tableData[nextRowIndex]) {
+            this.tableData[nextRowIndex].description = `${nextRow.itemInput} applied to: ${selectedRow.itemInput}`;
+            const match = nextRow.itemInput.match(/(\d+)%/);
+            if (!match) return;
+
+            const discountRate = parseInt(match[1]);
+
+            this.tableData[nextRowIndex].grossAmount = -(this.safeParseFloat(selectedRow.grossAmount) * discountRate) / 100;
+            this.tableData[nextRowIndex].rate = -(this.safeParseFloat(selectedRow.rate) * discountRate) / 100;
+            this.tableData[nextRowIndex].unitPriceSub = -(this.safeParseFloat(selectedRow.unitPriceSub) * discountRate) / 100;
+            this.tableData[nextRowIndex].amount = -(this.safeParseFloat(selectedRow.amount) * discountRate) / 100;
+            this.tableData[nextRowIndex].taxAmount = -(this.safeParseFloat(selectedRow.taxAmount) * discountRate) / 100;
+
+            this.tableData = [...this.tableData];
+        }
 
         this.tableData[this.selectedRowIndex] = {
             ...selectedRow,
@@ -671,21 +687,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     handleInsert() {
         if (this.selectedRowIndex === -1) return;
 
-        // Check if next row is an individual discount product
-        const nextRow = this.tableData[this.selectedRowIndex + 1];
-        if (nextRow && INDIVIDUAL_DISCOUNT_PRODUCTS.includes(nextRow.itemInput)) {
-            // Remove the discount row since it will no longer be associated
-            if (nextRow.salesforceId) {
-                this.deletedRowIds = [...this.deletedRowIds, nextRow.salesforceId];
-            }
-
-            // Remove the discount row from table data
-            this.tableData = [
-                ...this.tableData.slice(0, this.selectedRowIndex + 1),
-                ...this.tableData.slice(this.selectedRowIndex + 2)
-            ];
-        }
-
         const newRow = this.createNewRow();
         let insertIndex = this.selectedRowIndex + 1;
 
@@ -706,7 +707,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         this.selectedRowIndex = insertIndex;
         this.copyOfSelectedRow = JSON.parse(JSON.stringify(newRow));
 
-        // Recalculate discounts after insertion
         setTimeout(() => {
             this.recalculateOverallDiscount();
             this.recalculateIndividualDiscounts();
@@ -787,11 +787,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         this.assignRowNumbers();
 
         const dataObj = this.buildQuoteLineItems();
-        console.log('dataObj ', JSON.stringify(dataObj));
         const totalDiscountAmount = this.calculateOverallDiscountAmount();
-        console.log('totalDiscountAmount ', totalDiscountAmount);
         const discountPercent = this.safeParseFloat(this.rate);
-        console.log('discountPercent ', discountPercent);
 
         try {
             await upsertQuoteLineItems({
