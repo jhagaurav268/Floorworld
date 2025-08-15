@@ -635,24 +635,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
         const selectedRow = this.tableData[this.selectedRowIndex];
         const isEditMode = selectedRow.editmode;
-        const nextRow = this.tableData[this.selectedRowIndex + 1];
-        const nextRowIndex = this.selectedRowIndex + 1;
-
-        if (nextRow && INDIVIDUAL_DISCOUNT_PRODUCTS.includes(nextRow.itemInput) && this.tableData[nextRowIndex]) {
-            this.tableData[nextRowIndex].description = `${nextRow.itemInput} applied to: ${selectedRow.itemInput}`;
-            const match = nextRow.itemInput.match(/(\d+)%/);
-            if (!match) return;
-
-            const discountRate = parseInt(match[1]);
-
-            this.tableData[nextRowIndex].grossAmount = -(this.safeParseFloat(selectedRow.grossAmount) * discountRate) / 100;
-            this.tableData[nextRowIndex].rate = -(this.safeParseFloat(selectedRow.rate) * discountRate) / 100;
-            this.tableData[nextRowIndex].unitPriceSub = -(this.safeParseFloat(selectedRow.unitPriceSub) * discountRate) / 100;
-            this.tableData[nextRowIndex].amount = -(this.safeParseFloat(selectedRow.amount) * discountRate) / 100;
-            this.tableData[nextRowIndex].taxAmount = -(this.safeParseFloat(selectedRow.taxAmount) * discountRate) / 100;
-
-            this.tableData = [...this.tableData];
-        }
 
         this.tableData[this.selectedRowIndex] = {
             ...selectedRow,
@@ -664,6 +646,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             this.copyOfSelectedRow = JSON.parse(JSON.stringify(selectedRow));
         }
 
+        this.updateDiscountRelationships();
+
         this.tableData = [...this.tableData];
 
         setTimeout(() => {
@@ -672,6 +656,28 @@ export default class FloorWorldCarpetSolution extends LightningElement {
                 this.recalculateOverallDiscount();
             }
         }, 100);
+    }
+
+    updateDiscountRelationships() {
+        this.tableData.forEach(row => {
+            row.individualDiscountRow = null;
+            row.discountAppliedFromRow = null;
+        });
+
+        for (let i = 0; i < this.tableData.length; i++) {
+            const currentRow = this.tableData[i];
+
+            if (INDIVIDUAL_DISCOUNT_PRODUCTS.includes(currentRow.itemInput)) {
+                for (let j = i - 1; j >= 0; j--) {
+                    const prevRow = this.tableData[j];
+
+                    if (!INDIVIDUAL_DISCOUNT_PRODUCTS.includes(prevRow.itemInput)) {
+                        this.applyIndividualDiscount(j, currentRow);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     handleCancel() {
