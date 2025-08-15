@@ -266,7 +266,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             readmode: true,
             netAreaDisable: true,
             lengthDisable: true,
-            rowNumber: 9999 // Always at the end
+            rowNumber: 9999
         };
     }
 
@@ -735,7 +735,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             return;
         }
 
-        // If removing a row that has an individual discount applied, also remove the discount
         if (selectedRow.individualDiscountRow) {
             const discountRowIndex = this.tableData.findIndex(row => row.id === selectedRow.individualDiscountRow);
             if (discountRowIndex !== -1) {
@@ -745,7 +744,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
                 }
                 this.tableData.splice(discountRowIndex, 1);
 
-                // Adjust selectedRowIndex if discount was removed before selected row
                 if (discountRowIndex < this.selectedRowIndex) {
                     this.selectedRowIndex--;
                 }
@@ -783,7 +781,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     }
 
     async createQuoteLineItemData() {
-        // Assign row numbers before saving
         this.assignRowNumbers();
 
         const dataObj = this.buildQuoteLineItems();
@@ -802,7 +799,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             }
 
             this.showToast('Success', 'Quote Line Items saved successfully!', 'success');
-            // Clear deleted row IDs after successful save
             this.deletedRowIds = [];
         } catch (error) {
             throw new Error(error.body?.message || 'Failed to save items');
@@ -832,17 +828,14 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     assignRowNumbers() {
         let rowNumber = 1;
 
-        // Filter out overall discount rows for numbering
         const nonOverallDiscountRows = this.tableData.filter(row =>
             !(row.family === DISCOUNT_FAMILY && row.location === 'Discount')
         );
 
-        // Assign row numbers to non-overall-discount rows
         nonOverallDiscountRows.forEach(row => {
             row.rowNumber = rowNumber++;
         });
 
-        // Overall discount rows get the highest number to appear at the end
         this.tableData.forEach(row => {
             if (row.family === DISCOUNT_FAMILY && row.location === 'Discount') {
                 row.rowNumber = 9999;
