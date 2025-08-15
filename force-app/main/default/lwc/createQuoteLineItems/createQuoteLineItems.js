@@ -810,7 +810,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     }
 
     updateLocalDataWithSalesforceIds(rowIdToSalesforceIdMap) {
-        console.log('updateLocalDataWithSalesforceIds ', JSON.stringify(rowIdToSalesforceIdMap));
         if (!rowIdToSalesforceIdMap || Object.keys(rowIdToSalesforceIdMap).length === 0) {
             return;
         }
@@ -827,7 +826,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             return row;
         });
 
-        console.log('Updated tableData with Salesforce IDs:', this.tableData);
     }
 
 
