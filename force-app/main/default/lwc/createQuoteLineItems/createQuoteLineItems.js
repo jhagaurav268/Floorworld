@@ -668,6 +668,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
         setTimeout(() => {
             if (this.rate && this.rate !== '') {
+                this.recalculateIndividualDiscounts();
                 this.recalculateOverallDiscount();
             }
         }, 100);
@@ -676,12 +677,36 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     handleCancel() {
         if (this.selectedRowIndex === -1 || !this.copyOfSelectedRow) return;
 
-        this.tableData[this.selectedRowIndex] = {
-            ...this.copyOfSelectedRow,
-            editmode: false,
-            readmode: true
-        };
-        this.tableData = [...this.tableData];
+        const currentRow = this.tableData[this.selectedRowIndex];
+
+        if (!currentRow.salesforceId && this.copyOfSelectedRow.editmode) {
+            this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
+
+            this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
+
+            this.copyOfSelectedRow = null;
+
+            if (this.tableData.length > 0 && this.selectedRowIndex < this.tableData.length) {
+                this.tableData = this.tableData.map((row, index) => ({
+                    ...row,
+                    isSelected: index === this.selectedRowIndex
+                }));
+            }
+        } else {
+            this.tableData[this.selectedRowIndex] = {
+                ...this.copyOfSelectedRow,
+                editmode: false,
+                readmode: true
+            };
+            this.tableData = [...this.tableData];
+        }
+
+        setTimeout(() => {
+            if (this.rate && this.rate !== '') {
+                this.recalculateOverallDiscount();
+            }
+            this.recalculateIndividualDiscounts();
+        }, 100);
     }
 
     handleInsert() {
