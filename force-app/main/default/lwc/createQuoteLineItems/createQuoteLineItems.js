@@ -35,7 +35,12 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             { label: 'Discount 10%', value: '10' },
             { label: 'Discount 15%', value: '15' },
             { label: 'Discount 25%', value: '25' },
+            { label: 'Custom', value: 'Custom' }
         ];
+    }
+
+    get isCustomDiscountEnabled() {
+        return this.selectedDiscount !== 'Custom';
     }
 
     connectedCallback() {
@@ -314,7 +319,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
             this.tableData = [...this.tableData];
 
-            this.showToast('Success', `${discountRate}% individual discount applied to ${targetRow.itemInput}!`, 'success');
+            // this.showToast('Success', `${discountRate}% individual discount applied to ${targetRow.itemInput}!`, 'success');
         }
     }
 

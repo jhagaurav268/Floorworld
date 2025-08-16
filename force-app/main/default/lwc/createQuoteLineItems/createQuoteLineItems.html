@@ -10,7 +10,7 @@
                     onchange={handleDiscountChange}>
                 </lightning-combobox>
                 <lightning-input style="width:7%" label="Custom Discount" type="number" value={rate}
-                    onblur={handleRateChange}>
+                    onblur={handleRateChange} disabled={isCustomDiscountEnabled}>
                 </lightning-input>
             </div>
 
