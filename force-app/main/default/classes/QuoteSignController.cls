@@ -1,36 +1,11 @@
 public with sharing class QuoteSignController {
     
-    private static final Integer MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final Integer MAX_FILE_SIZE = 10 * 1024 * 1024; 
     private static final Integer HTTP_TIMEOUT = 120000;
     private static final String SIGNATURE_FIELD_TYPE_ID = '8020000000000141';
-    private static final String DEFAULT_RECIPIENT_EMAIL = 'gaurav@cloudsciencelabs.com';
-    private static final String DEFAULT_RECIPIENT_NAME = 'Gaurav Jha';
     private static final String QUOTE_STATUS_SENT = 'Contract/ Quote Sent';
     
     public class ZohoSignException extends Exception {}
-    
-    @AuraEnabled
-    public static String handleQuoteSign(Id quoteId) {
-        try {
-            if (quoteId == null) {
-                throw new AuraHandledException('Quote ID cannot be null');
-            }
-            
-            DocumentCreationResponse docResponse = createDocument(quoteId);
-            
-            Integer pageCount = getTotalPagesFromZoho(docResponse.requestId) - 1;
-            
-            submitDocumentForSignature(docResponse, pageCount);
-            
-            updateQuoteStatus(quoteId, docResponse.requestId);
-            
-            return 'Success: Quote sent for signature';
-            
-        } catch (Exception e) {
-            System.debug('Error in handleQuoteSign: ' + e.getMessage());
-            throw new AuraHandledException('Failed to process quote signature: ' + e.getMessage());
-        }
-    }
     
     public class DocumentCreationResponse {
         public String requestId { get; set; }
@@ -44,7 +19,35 @@ public with sharing class QuoteSignController {
         }
     }
     
-    private static DocumentCreationResponse createDocument(Id quoteId) {
+    @AuraEnabled
+    public static String handleQuoteSign(Id quoteId) {
+        try {
+            if (quoteId == null) {
+                throw new AuraHandledException('Quote ID cannot be null');
+            }
+            
+            // Fetch recipient info from quote
+            Quote q = [
+                SELECT Id, Email, Account.Name
+                FROM Quote
+                WHERE Id = :quoteId
+                LIMIT 1
+            ];
+            
+            DocumentCreationResponse docResponse = createDocument(quoteId, q.Account.Name, q.Email);
+            Integer pageCount = getTotalPagesFromZoho(docResponse.requestId) - 1;
+            submitDocumentForSignature(docResponse, pageCount, q.Account.Name, q.Email);
+            updateQuoteStatus(quoteId, docResponse.requestId);
+            
+            return 'Success: Quote sent for signature';
+            
+        } catch (Exception e) {
+            System.debug('Error in handleQuoteSign: ' + e.getMessage());
+            throw new AuraHandledException('Failed to process quote signature: ' + e.getMessage());
+        }
+    }
+    
+    private static DocumentCreationResponse createDocument(Id quoteId, String recipientName, String recipientEmail) {
         try {
             ContentVersion contentVersion = getQuoteContentVersion(quoteId);
             
@@ -52,8 +55,7 @@ public with sharing class QuoteSignController {
                 throw new AuraHandledException('File size exceeds 10MB limit');
             }
             
-            Map<String, Object> requestPayload = buildRequestPayload();
-            
+            Map<String, Object> requestPayload = buildRequestPayload(recipientName, recipientEmail);
             HttpResponse response = sendZohoCreateRequest(contentVersion, requestPayload);
             
             return parseDocumentCreationResponse(response);
@@ -90,10 +92,10 @@ public with sharing class QuoteSignController {
         return contentVersions[0];
     }
     
-    private static Map<String, Object> buildRequestPayload() {
+    private static Map<String, Object> buildRequestPayload(String recipientName, String recipientEmail) {
         Map<String, Object> action = new Map<String, Object>{
-            'recipient_email' => DEFAULT_RECIPIENT_EMAIL,
-            'recipient_name' => DEFAULT_RECIPIENT_NAME,
+            'recipient_email' => recipientEmail,
+            'recipient_name' => recipientName,
             'action_type' => 'SIGN'
         };
         
@@ -219,9 +221,9 @@ public with sharing class QuoteSignController {
         return 1; 
     }
     
-    private static void submitDocumentForSignature(DocumentCreationResponse docResponse, Integer pageCount) {
+    private static void submitDocumentForSignature(DocumentCreationResponse docResponse, Integer pageCount, String recipientName, String recipientEmail) {
         try {
-            Map<String, Object> requestBody = buildSubmitRequestBody(docResponse, pageCount);
+            Map<String, Object> requestBody = buildSubmitRequestBody(docResponse, pageCount, recipientName, recipientEmail);
             
             HttpRequest req = new HttpRequest();
             req.setEndpoint('callout:Zoho/api/v1/requests/' + docResponse.requestId + '/submit');
@@ -244,7 +246,7 @@ public with sharing class QuoteSignController {
         }
     }
     
-    private static Map<String, Object> buildSubmitRequestBody(DocumentCreationResponse docResponse, Integer pageCount) {
+    private static Map<String, Object> buildSubmitRequestBody(DocumentCreationResponse docResponse, Integer pageCount, String recipientName, String recipientEmail) {
         Map<String, Object> signatureField = new Map<String, Object>{
             'field_type_id' => SIGNATURE_FIELD_TYPE_ID,
             'field_type_name' => 'Signature',
@@ -253,7 +255,6 @@ public with sharing class QuoteSignController {
             'field_name' => 'Signature',
             'field_label' => 'Signature',
             'field_category' => 'image',
-            'description_tooltip' => '',
             'is_draggable' => false,
             'is_resizable' => true,
             'abs_width' => 115,
@@ -270,19 +271,11 @@ public with sharing class QuoteSignController {
             'action_id' => docResponse.actionId,
             'fields' => new List<Object>{ signatureField },
             'verify_recipient' => false,
-            'recipient_countrycode_iso' => '',
             'action_type' => 'SIGN',
-            'cloud_provider_name' => 'Zoho Sign',
-            'recipient_email' => DEFAULT_RECIPIENT_EMAIL,
+            'recipient_email' => recipientEmail,
+            'recipient_name' => recipientName,
             'send_completed_document' => true,
-            'recipient_phonenumber' => '',
-            'is_bulk' => false,
-            'signing_order' => -1,
-            'cloud_provider_id' => 10,
-            'recipient_name' => DEFAULT_RECIPIENT_NAME,
-            'delivery_mode' => 'EMAIL',
-            'recipient_countrycode' => '',
-            'deleted_fields' => new List<Object>()
+            'delivery_mode' => 'EMAIL'
         };
         
         return new Map<String, Object>{
@@ -299,7 +292,8 @@ public with sharing class QuoteSignController {
             Quote quoteRecord = new Quote(
                 Id = quoteId,
                 Status = QUOTE_STATUS_SENT,
-                Signed_Request_Id__c = requestId
+                Signed_Request_Id__c = requestId,
+                Decline_Reason__c = ''
             );
             
             update quoteRecord;
