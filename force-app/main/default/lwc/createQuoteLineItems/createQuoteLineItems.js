@@ -750,19 +750,20 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     }
 
     handleRemove() {
-        if (this.selectedRowIndex === -1 || this.tableData.length === 1) return;
+        if (this.selectedRowIndex === -1) return;
 
         const selectedRow = this.tableData[this.selectedRowIndex];
         const nextRow = this.tableData[this.selectedRowIndex + 1];
+        const isLastRow = this.tableData.length === 1;
 
         if (selectedRow.salesforceId) {
             this.deletedRowIds = [...this.deletedRowIds, selectedRow.salesforceId];
         }
+
         setTimeout(() => {
             this.recalculateOverallDiscount();
             this.recalculateIndividualDiscounts();
         }, 100);
-
 
         if (nextRow &&
             INDIVIDUAL_DISCOUNT_PRODUCTS.includes(nextRow.itemInput) &&
@@ -788,7 +789,14 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
         if (selectedRow.family === DISCOUNT_FAMILY && selectedRow.location === 'Discount') {
             this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
-            this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
+
+            if (isLastRow) {
+                this.tableData = [this.createNewRow()];
+                this.selectedRowIndex = 0;
+            } else {
+                this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
+            }
+
             this.rate = '';
             this.selectedDiscount = '';
             return;
@@ -796,13 +804,30 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
         if (INDIVIDUAL_DISCOUNT_PRODUCTS.includes(selectedRow.itemInput)) {
             this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
-            this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
+
+            if (isLastRow) {
+                this.tableData = [this.createNewRow()];
+                this.selectedRowIndex = 0;
+            } else {
+                this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
+            }
             return;
         }
 
         this.tableData = this.tableData.filter((_, index) => index !== this.selectedRowIndex);
-        this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
 
+        if (isLastRow) {
+            const newRow = this.createNewRow();
+            newRow.isSelected = true;
+            this.tableData = [newRow];
+            this.selectedRowIndex = 0;
+        } else {
+            this.selectedRowIndex = Math.max(0, this.selectedRowIndex - 1);
+            this.tableData = this.tableData.map((row, index) => ({
+                ...row,
+                isSelected: index === this.selectedRowIndex
+            }));
+        }
     }
 
     async handleSave() {
