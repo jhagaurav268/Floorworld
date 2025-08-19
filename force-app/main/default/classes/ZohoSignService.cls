@@ -1,84 +1,96 @@
 public with sharing class ZohoSignService {
     
-    private static final String DEFAULT_RECIPIENT_EMAIL = 'gaurav@cloudsciencelabs.com';
-    private static final String DEFAULT_RECIPIENT_NAME = 'Gaurav Jha';
-    private static final String REQUEST_NAME = 'Quote Signature Request';
-    private static final Integer MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    private static final Integer TIMEOUT = 120000; // 2 minutes
-    private static final String BOUNDARY_PREFIX = '----boundary_';
-    private static final String LINE_END = '\r\n';
+    private static final Integer MAX_FILE_SIZE = 10 * 1024 * 1024; 
+    private static final Integer HTTP_TIMEOUT = 120000;
+    private static final String SIGNATURE_FIELD_TYPE_ID = '8020000000000141';
     
-    private static final String FIELD_TYPE_NAME = 'Textfield';
-    private static final String FIELD_NAME = 'SignerName';
-    private static final String FIELD_CATEGORY = 'Text';
-    private static final Integer DEFAULT_PAGE_NO = 0;
-    private static final String DEFAULT_X_VALUE = '50';
-    private static final String DEFAULT_Y_VALUE = '100';
-    private static final String DEFAULT_WIDTH = '150';
-    private static final String DEFAULT_HEIGHT = '30';
+    public class ZohoSignException extends Exception {}
     
-    /**
-     * Main method to process quote signature workflow
-     * @param quoteId The ID of the quote to be signed
-     */
-    public static void processQuoteSignature(Id quoteId) {
+    public class DocumentCreationResponse {
+        public String requestId { get; set; }
+        public String actionId { get; set; }
+        public String documentId { get; set; }
+        
+        public DocumentCreationResponse(String requestId, String actionId, String documentId) {
+            this.requestId = requestId;
+            this.actionId = actionId;
+            this.documentId = documentId;
+        }
+    }
+    
+    public class SignatureRequest {
+        public Id recordId { get; set; }
+        public String recipientName { get; set; }
+        public String recipientEmail { get; set; }
+        public String requestName { get; set; }
+        public String statusFieldName { get; set; }
+        public String statusValue { get; set; }
+        public String requestIdFieldName { get; set; }
+        
+        public SignatureRequest(Id recordId, String recipientName, String recipientEmail, 
+                               String requestName, String statusFieldName, String statusValue, 
+                               String requestIdFieldName) {
+            this.recordId = recordId;
+            this.recipientName = recipientName;
+            this.recipientEmail = recipientEmail;
+            this.requestName = requestName;
+            this.statusFieldName = statusFieldName;
+            this.statusValue = statusValue;
+            this.requestIdFieldName = requestIdFieldName;
+        }
+    }
+    
+    public static String processDocumentForSignature(SignatureRequest signatureRequest) {
         try {
-            ZohoSignResponse createResponse = createDocument(quoteId);
+            if (signatureRequest.recordId == null) {
+                throw new AuraHandledException('Record ID cannot be null');
+            }
             
-            submitDocumentForSignature(
-                createResponse.requestId, 
-                createResponse.actionId, 
-                createResponse.documentId
+            DocumentCreationResponse docResponse = createDocument(signatureRequest);
+            Integer pageCount = getTotalPagesFromZoho(docResponse.requestId) - 1;
+            submitDocumentForSignature(docResponse, pageCount, signatureRequest.recipientName, signatureRequest.recipientEmail);
+            updateRecordStatus(signatureRequest, docResponse.requestId);
+            
+            return 'Success: Document sent for signature';
+            
+        } catch (Exception e) {
+            System.debug('Error in processDocumentForSignature: ' + e.getMessage());
+            throw new AuraHandledException('Failed to process document signature: ' + e.getMessage());
+        }
+    }
+    
+    private static DocumentCreationResponse createDocument(SignatureRequest signatureRequest) {
+        try {
+            ContentVersion contentVersion = getRecordContentVersion(signatureRequest.recordId);
+            
+            if (contentVersion.ContentSize > MAX_FILE_SIZE) {
+                throw new AuraHandledException('File size exceeds 10MB limit');
+            }
+            
+            Map<String, Object> requestPayload = buildRequestPayload(
+                signatureRequest.recipientName, 
+                signatureRequest.recipientEmail,
+                signatureRequest.requestName
             );
+            HttpResponse response = sendZohoCreateRequest(contentVersion, requestPayload);
             
-            System.debug(LoggingLevel.INFO, 'Quote signature process completed successfully for Quote ID: ' + quoteId);
+            return parseDocumentCreationResponse(response);
             
         } catch (Exception e) {
-            System.debug(LoggingLevel.ERROR, 'Error in processQuoteSignature: ' + e.getMessage());
-            throw e;
+            throw new ZohoSignException('Error creating document: ' + e.getMessage());
         }
     }
     
-    /**
-     * Creates a document in Zoho Sign
-     * @param quoteId The ID of the quote
-     * @return ZohoSignResponse containing the response data
-     */
-    private static ZohoSignResponse createDocument(Id quoteId) {
-        try {
-            ContentVersion pdfFile = getPdfFileFromQuote(quoteId);
-            
-            validateFileSize(pdfFile.ContentSize);
-            
-            String jsonPayload = buildCreateDocumentPayload();
-            
-            Blob requestBody = buildMultipartFormData(jsonPayload, pdfFile);
-            
-            HttpResponse response = makeCreateDocumentRequest(requestBody);
-            
-            return parseCreateDocumentResponse(response);
-            
-        } catch (Exception e) {
-            System.debug(LoggingLevel.ERROR, 'Error in createDocument: ' + e.getMessage());
-            throw new AuraHandledException('Failed to create document in Zoho Sign: ' + e.getMessage());
-        }
-    }
-    
-    /**
-     * Retrieves the PDF file associated with the quote
-     * @param quoteId The ID of the quote
-     * @return ContentVersion of the PDF file
-     */
-    private static ContentVersion getPdfFileFromQuote(Id quoteId) {
+    private static ContentVersion getRecordContentVersion(Id recordId) {
         List<ContentDocumentLink> links = [
             SELECT ContentDocumentId
             FROM ContentDocumentLink
-            WHERE LinkedEntityId = :quoteId
+            WHERE LinkedEntityId = :recordId
             LIMIT 1
         ];
         
         if (links.isEmpty()) {
-            throw new AuraHandledException('No PDF file found on this Quote.');
+            throw new AuraHandledException('No PDF file found attached to this record');
         }
         
         List<ContentVersion> contentVersions = [
@@ -90,259 +102,232 @@ public with sharing class ZohoSignService {
         ];
         
         if (contentVersions.isEmpty()) {
-            throw new AuraHandledException('No content version found for the PDF file.');
+            throw new AuraHandledException('No valid content version found');
         }
         
         return contentVersions[0];
     }
     
-    /**
-     * Validates the file size
-     * @param fileSize The size of the file in bytes
-     */
-    private static void validateFileSize(Integer fileSize) {
-        if (fileSize > MAX_FILE_SIZE) {
-            throw new AuraHandledException('File size exceeds 10MB limit');
-        }
-    }
-    
-    /**
-     * Builds the JSON payload for creating a document
-     * @return JSON string payload
-     */
-    private static String buildCreateDocumentPayload() {
+    private static Map<String, Object> buildRequestPayload(String recipientName, String recipientEmail, String requestName) {
         Map<String, Object> action = new Map<String, Object>{
-            'recipient_email' => DEFAULT_RECIPIENT_EMAIL,
-            'recipient_name' => DEFAULT_RECIPIENT_NAME,
+            'recipient_email' => recipientEmail,
+            'recipient_name' => recipientName,
             'action_type' => 'SIGN'
         };
         
         Map<String, Object> request = new Map<String, Object>{
-            'request_name' => REQUEST_NAME,
+            'request_name' => requestName,
             'actions' => new List<Object>{ action }
         };
         
-        Map<String, Object> payloadWrapper = new Map<String, Object>{
-            'requests' => request
-        };
-        
-        return JSON.serialize(payloadWrapper);
+        return new Map<String, Object>{ 'requests' => request };
     }
     
-    /**
-     * Builds multipart form data for the HTTP request
-     * @param jsonPayload The JSON payload
-     * @param pdfFile The PDF file content version
-     * @return Blob containing the multipart form data
-     */
-    private static Blob buildMultipartFormData(String jsonPayload, ContentVersion pdfFile) {
-        String boundary = BOUNDARY_PREFIX + String.valueOf(Crypto.getRandomInteger());
+    private static HttpResponse sendZohoCreateRequest(ContentVersion cv, Map<String, Object> payload) {
+        String boundary = '----boundary_' + String.valueOf(Crypto.getRandomInteger());
+        String jsonPayload = JSON.serialize(payload);
         
-        String bodyHeader = buildBodyHeader(boundary, jsonPayload, pdfFile);
-        String bodyFooter = LINE_END + '--' + boundary + '--';
-        
-        Blob bodyHeaderBlob = Blob.valueOf(bodyHeader);
-        Blob bodyFooterBlob = Blob.valueOf(bodyFooter);
-        
-        return combineBlobs(new List<Blob>{
-            bodyHeaderBlob,
-            pdfFile.VersionData,
-            bodyFooterBlob
-        });
-    }
-    
-    /**
-     * Builds the header part of the multipart form data
-     * @param boundary The boundary string
-     * @param jsonPayload The JSON payload
-     * @param pdfFile The PDF file content version
-     * @return String containing the header
-     */
-    private static String buildBodyHeader(String boundary, String jsonPayload, ContentVersion pdfFile) {
-        return '--' + boundary + LINE_END +
-               'Content-Disposition: form-data; name="data"' + LINE_END +
-               'Content-Type: application/json' + LINE_END + LINE_END +
-               jsonPayload + LINE_END +
-               '--' + boundary + LINE_END +
-               'Content-Disposition: form-data; name="file"; filename="' + 
-               pdfFile.Title + '.' + pdfFile.FileExtension + '"' + LINE_END +
-               'Content-Type: application/pdf' + LINE_END + LINE_END;
-    }
-    
-    /**
-     * Makes the HTTP request to create a document
-     * @param requestBody The request body as Blob
-     * @return HttpResponse from the API call
-     */
-    private static HttpResponse makeCreateDocumentRequest(Blob requestBody) {
-        String boundary = BOUNDARY_PREFIX + String.valueOf(Crypto.getRandomInteger());
+        Blob requestBody = buildMultipartBody(cv, jsonPayload, boundary);
         
         HttpRequest req = new HttpRequest();
         req.setEndpoint('callout:Zoho/api/v1/requests');
         req.setMethod('POST');
         req.setHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
         req.setBodyAsBlob(requestBody);
-        req.setTimeout(TIMEOUT);
+        req.setTimeout(HTTP_TIMEOUT);
         
         HttpResponse response = new Http().send(req);
         
-        System.debug(LoggingLevel.DEBUG, 'Zoho Sign Create Document Response Status: ' + response.getStatusCode());
-        System.debug(LoggingLevel.DEBUG, 'Zoho Sign Create Document Response Body: ' + response.getBody());
-        
-        if (response.getStatusCode() != 200 && response.getStatusCode() != 201) {
-            throw new AuraHandledException('Zoho Sign API Error: ' + response.getStatusCode() + ' - ' + response.getBody());
+        if (response.getStatusCode() < 200 || response.getStatusCode() >= 300) {
+            throw new ZohoSignException(
+                'Zoho API Error: ' + response.getStatusCode() + ' - ' + response.getBody()
+            );
         }
         
         return response;
     }
     
-    /**
-     * Parses the create document response
-     * @param response The HTTP response
-     * @return ZohoSignResponse containing parsed data
-     */
-    private static ZohoSignResponse parseCreateDocumentResponse(HttpResponse response) {
+    private static Blob buildMultipartBody(ContentVersion cv, String jsonPayload, String boundary) {
+        String lineEnd = '\r\n';
+        
+        String bodyHeader = 
+            '--' + boundary + lineEnd +
+            'Content-Disposition: form-data; name="data"' + lineEnd +
+            'Content-Type: application/json' + lineEnd + lineEnd +
+            jsonPayload + lineEnd +
+            '--' + boundary + lineEnd +
+            'Content-Disposition: form-data; name="file"; filename="' + 
+            cv.Title + '.' + cv.FileExtension + '"' + lineEnd +
+            'Content-Type: application/pdf' + lineEnd + lineEnd;
+        
+        String bodyFooter = lineEnd + '--' + boundary + '--';
+        
+        String combinedDataAsHex = 
+            EncodingUtil.convertToHex(Blob.valueOf(bodyHeader)) + 
+            EncodingUtil.convertToHex(cv.VersionData) + 
+            EncodingUtil.convertToHex(Blob.valueOf(bodyFooter));
+        
+        return EncodingUtil.convertFromHex(combinedDataAsHex);
+    }
+    
+    private static DocumentCreationResponse parseDocumentCreationResponse(HttpResponse response) {
         Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
-        
         Map<String, Object> requestsMap = (Map<String, Object>) responseMap.get('requests');
+        
         if (requestsMap == null) {
-            throw new AuraHandledException('Invalid response format: missing requests object');
+            throw new ZohoSignException('Invalid response format: missing requests data');
         }
-        
-        List<Object> actionsList = (List<Object>) requestsMap.get('actions');
-        if (actionsList == null || actionsList.isEmpty()) {
-            throw new AuraHandledException('Invalid response format: missing actions array');
-        }
-        
-        Map<String, Object> firstAction = (Map<String, Object>) actionsList[0];
-        String actionId = (String) firstAction.get('action_id');
-        
-        List<Object> docFieldList = (List<Object>) requestsMap.get('document_fields');
-        if (docFieldList == null || docFieldList.isEmpty()) {
-            throw new AuraHandledException('Invalid response format: missing document_fields array');
-        }
-        
-        Map<String, Object> docField = (Map<String, Object>) docFieldList[0];
-        String documentId = (String) docField.get('document_id');
         
         String requestId = (String) requestsMap.get('request_id');
         
-        return new ZohoSignResponse(requestId, actionId, documentId);
+        List<Object> actionsList = (List<Object>) requestsMap.get('actions');
+        String actionId = null;
+        if (actionsList != null && !actionsList.isEmpty()) {
+            Map<String, Object> action = (Map<String, Object>) actionsList[0];
+            actionId = (String) action.get('action_id');
+        }
+        
+        List<Object> docFieldList = (List<Object>) requestsMap.get('document_fields');
+        String documentId = null;
+        if (docFieldList != null && !docFieldList.isEmpty()) {
+            Map<String, Object> docField = (Map<String, Object>) docFieldList[0];
+            documentId = (String) docField.get('document_id');
+        }
+        
+        if (String.isBlank(requestId) || String.isBlank(actionId) || String.isBlank(documentId)) {
+            throw new ZohoSignException('Missing required response data from Zoho API');
+        }
+        
+        return new DocumentCreationResponse(requestId, actionId, documentId);
     }
     
-    /**
-     * Submits the document for signature
-     * @param requestId The request ID from create document response
-     * @param actionId The action ID from create document response
-     * @param documentId The document ID from create document response
-     */
-    private static void submitDocumentForSignature(String requestId, String actionId, String documentId) {
+    private static Integer getTotalPagesFromZoho(String requestId) {
         try {
-            String jsonPayload = buildSubmitDocumentPayload(actionId, documentId);
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint('callout:Zoho/api/v1/requests/' + requestId);
+            req.setMethod('GET');
+            req.setHeader('Accept', 'application/json');
+            req.setTimeout(HTTP_TIMEOUT);
             
-            HttpResponse response = makeSubmitDocumentRequest(requestId, jsonPayload);
+            HttpResponse response = new Http().send(req);
             
-            System.debug(LoggingLevel.INFO, 'Document submitted for signature successfully');
+            if (response.getStatusCode() == 200) {
+                Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
+                Map<String, Object> requestsMap = (Map<String, Object>) responseMap.get('requests');
+                
+                if (requestsMap != null) {
+                    List<Object> documentIds = (List<Object>) requestsMap.get('document_ids');
+                    
+                    if (documentIds != null && !documentIds.isEmpty()) {
+                        Map<String, Object> firstDoc = (Map<String, Object>) documentIds[0];
+                        
+                        if (firstDoc.containsKey('total_pages')) {
+                            Integer totalPages = (Integer) firstDoc.get('total_pages');
+                            return totalPages != null ? totalPages : 1;
+                        }
+                    }
+                }
+            } else {
+                System.debug('Warning: Could not retrieve page count. Status: ' + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.debug('Warning: Error getting total pages, defaulting to 1: ' + e.getMessage());
+        }
+        
+        return 1; 
+    }
+    
+    private static void submitDocumentForSignature(DocumentCreationResponse docResponse, Integer pageCount, String recipientName, String recipientEmail) {
+        try {
+            Map<String, Object> requestBody = buildSubmitRequestBody(docResponse, pageCount, recipientName, recipientEmail);
+            
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint('callout:Zoho/api/v1/requests/' + docResponse.requestId + '/submit');
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setHeader('Accept', 'application/json');
+            req.setBody(JSON.serialize(requestBody));
+            req.setTimeout(HTTP_TIMEOUT);
+            
+            HttpResponse response = new Http().send(req);
+            
+            if (response.getStatusCode() < 200 || response.getStatusCode() >= 300) {
+                throw new ZohoSignException(
+                    'Submit Error: ' + response.getStatusCode() + ' - ' + response.getBody()
+                );
+            }
             
         } catch (Exception e) {
-            System.debug(LoggingLevel.ERROR, 'Error in submitDocumentForSignature: ' + e.getMessage());
-            throw new AuraHandledException('Failed to submit document for signature: ' + e.getMessage());
+            throw new ZohoSignException('Error submitting document for signature: ' + e.getMessage());
         }
     }
     
-    /**
-     * Builds the JSON payload for submitting a document for signature
-     * @param actionId The action ID
-     * @param documentId The document ID
-     * @return JSON string payload
-     */
-    private static String buildSubmitDocumentPayload(String actionId, String documentId) {
-        Map<String, Object> field = new Map<String, Object>{
-            'field_type_name' => FIELD_TYPE_NAME,
-            'action_id' => actionId,
-            'document_id' => documentId,
-            'field_name' => FIELD_NAME,
-            'field_category' => FIELD_CATEGORY,
-            'page_no' => DEFAULT_PAGE_NO,
-            'x_value' => DEFAULT_X_VALUE,
-            'y_value' => DEFAULT_Y_VALUE,
-            'width' => DEFAULT_WIDTH,
-            'height' => DEFAULT_HEIGHT
+    private static Map<String, Object> buildSubmitRequestBody(DocumentCreationResponse docResponse, Integer pageCount, String recipientName, String recipientEmail) {
+        Map<String, Object> signatureField = new Map<String, Object>{
+            'field_type_id' => SIGNATURE_FIELD_TYPE_ID,
+            'field_type_name' => 'Signature',
+            'action_id' => docResponse.actionId,
+            'is_mandatory' => true,
+            'field_name' => 'Signature',
+            'field_label' => 'Signature',
+            'field_category' => 'image',
+            'is_draggable' => false,
+            'is_resizable' => true,
+            'abs_width' => 115,
+            'abs_height' => 20,
+            'width' => '18.790850',
+            'height' => '2.525253',
+            'x_value' => '77.249884',
+            'y_value' => '94.289047',
+            'page_no' => pageCount,
+            'document_id' => docResponse.documentId
         };
         
         Map<String, Object> action = new Map<String, Object>{
-            'action_type' => 'SIGN',
-            'recipient_email' => DEFAULT_RECIPIENT_EMAIL,
-            'recipient_name' => DEFAULT_RECIPIENT_NAME,
+            'action_id' => docResponse.actionId,
+            'fields' => new List<Object>{ signatureField },
             'verify_recipient' => false,
-            'signing_order' => 0,
-            'action_id' => actionId,
-            'fields' => new List<Object>{ field }
+            'action_type' => 'SIGN',
+            'recipient_email' => recipientEmail,
+            'recipient_name' => recipientName,
+            'send_completed_document' => true,
+            'delivery_mode' => 'EMAIL'
         };
         
-        Map<String, Object> body = new Map<String, Object>{
+        return new Map<String, Object>{
             'requests' => new Map<String, Object>{
-                'actions' => new List<Object>{ action }
+                'actions' => new List<Object>{ action },
+                'deleted_actions' => new List<Object>(),
+                'document_fields' => new List<Object>()
             }
         };
-        
-        return JSON.serialize(body);
     }
     
-    /**
-     * Makes the HTTP request to submit document for signature
-     * @param requestId The request ID
-     * @param jsonPayload The JSON payload
-     * @return HttpResponse from the API call
-     */
-    private static HttpResponse makeSubmitDocumentRequest(String requestId, String jsonPayload) {
-        String payload = 'data=' + EncodingUtil.urlEncode(jsonPayload, 'UTF-8');
-        
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint('callout:Zoho/api/v1/requests/' + requestId + '/submit');
-        req.setMethod('POST');
-        req.setHeader('Content-Type', 'application/x-www-form-urlencoded');
-        req.setHeader('Accept', 'application/json');
-        req.setBody(payload);
-        req.setTimeout(TIMEOUT);
-        
-        HttpResponse response = new Http().send(req);
-        
-        System.debug(LoggingLevel.DEBUG, 'Submit Document Response Status: ' + response.getStatusCode());
-        System.debug(LoggingLevel.DEBUG, 'Submit Document Response Body: ' + response.getBody());
-        
-        if (response.getStatusCode() != 200 && response.getStatusCode() != 201) {
-            throw new AuraHandledException('Submit Document API Error: ' + response.getStatusCode() + ' - ' + response.getBody());
-        }
-        
-        return response;
-    }
-    
-    /**
-     * Combines multiple blobs into a single blob
-     * @param blobs List of blobs to combine
-     * @return Combined blob
-     */
-    private static Blob combineBlobs(List<Blob> blobs) {
-        String encodedString = '';
-        for (Blob b : blobs) {
-            encodedString += EncodingUtil.base64Encode(b);
-        }
-        return EncodingUtil.base64Decode(encodedString);
-    }
-    
-    /**
-     * Inner class to hold Zoho Sign response data
-     */
-    public class ZohoSignResponse {
-        public String requestId { get; private set; }
-        public String actionId { get; private set; }
-        public String documentId { get; private set; }
-        
-        public ZohoSignResponse(String requestId, String actionId, String documentId) {
-            this.requestId = requestId;
-            this.actionId = actionId;
-            this.documentId = documentId;
+    private static void updateRecordStatus(SignatureRequest signatureRequest, String requestId) {
+        try {
+            String sObjectType = String.valueOf(signatureRequest.recordId.getSObjectType());
+            
+            Map<String, Object> fieldsToUpdate = new Map<String, Object>();
+            fieldsToUpdate.put('Id', signatureRequest.recordId);
+            fieldsToUpdate.put(signatureRequest.statusFieldName, signatureRequest.statusValue);
+            fieldsToUpdate.put(signatureRequest.requestIdFieldName, requestId);
+            
+            if (sObjectType == 'Quote') {
+                fieldsToUpdate.put('Decline_Reason__c', '');
+            } else if (sObjectType == 'Order') {
+                
+            }
+            
+            SObject recordToUpdate = Schema.getGlobalDescribe().get(sObjectType).newSObject();
+            
+            for (String fieldName : fieldsToUpdate.keySet()) {
+                recordToUpdate.put(fieldName, fieldsToUpdate.get(fieldName));
+            }
+            
+            update recordToUpdate;
+            
+        } catch (Exception e) {
+            System.debug('Warning: Could not update record status: ' + e.getMessage());
         }
     }
 }
