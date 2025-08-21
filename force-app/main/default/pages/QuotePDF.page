@@ -1,83 +1,517 @@
-<!-- QuotePDFPage.page -->
-<apex:page standardController="Quote" renderAs="pdf" applyBodyTag="false">
-    <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
-                .quote-info { margin: 20px 0; }
-                .line-items { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                .line-items th, .line-items td { border: 1px solid #ddd; padding: 8px; }
-                .line-items th { background-color: #f2f2f2; }
-                .terms { margin-top: 30px; }
-                .signature-area { 
-                position: absolute; 
-                bottom: 50px; 
-                width: 100%; 
-                text-align: center;
-                border-top: 1px solid #000;
-                padding-top: 10px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>QUOTE</h1>
-                <p>Quote Number: {!Quote.QuoteNumber}</p>
-                <p>Date: {!TODAY()}</p>
-            </div>
+<apex:page applyBodyTag="false" showHeader="false" sidebar="false" standardStylesheets="false" renderAs="pdf" controller="QuotePdfController">
+    <head>
+        <style>
+            @page {
+            size: A4 portrait;
+            margin: 30mm 10mm 25mm 10mm;
+            @bottom-left {
+            content: element(footer);
+            }
+            @top-center {
+            content: element(header);
+            }
+            }
             
-            <div class="quote-info">
-                <p><strong>Account:</strong> {!Quote.Opportunity.Account.Name}</p>
-                <p><strong>Contact:</strong> {!Quote.Contact.Name}</p>
-                <p><strong>Valid Until:</strong> {!Quote.ExpirationDate}</p>
-            </div>
+            div.header {
+            position: running(header);
+            text-align: center;
+            }
             
-            <table class="line-items">
-                <thead>
+            div.footer {
+            position: running(footer);
+            }
+            
+            .pagenumber:before {
+            content: counter(page);
+            }
+            
+            .pagecount:before {
+            content: counter(pages);
+            }
+            
+            body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #000;
+            line-height: 1.2;
+            }
+            
+            .main-header {
+            width: 100%;
+            margin-bottom: 20px;
+            }
+            
+            .quote-title {
+            float: right;
+            text-align: right;
+            width: 45%;
+            }
+            
+            .quote-title h2 {
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 0;
+            }
+            
+            .logo{
+            float: left;
+            text-align: left;
+            }
+            
+            .quote-number {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 5px 0;
+            }
+            
+            .quote-date {
+            font-size: 10pt;
+            margin: 5px 0;
+            }
+            
+            .company-section {
+            float: left;
+            width: 50%;
+            margin-top: 20px;
+            }
+            
+            .company-info h3 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            }
+            
+            .bill-to-section {
+            float: right;
+            width: 45%;
+            margin-top: 20px;
+            }
+            
+            .section-title {
+            font-weight: bold;
+            font-size: 12pt;
+            margin-bottom: 5px;
+            }
+            
+            .customer-name {
+            font-weight: bold;
+            font-size: 11pt;
+            }
+            
+            .clear {
+            clear: both;
+            }
+            
+            .details-section {
+            width: 100%;
+            margin: 20px 0;
+            }
+            
+            .details-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 5px;
+            }
+            
+            .detail-left, .detail-right {
+            display: table-cell;
+            vertical-align: top;
+            width: 50%;
+            }
+            
+            .detail-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 120px;
+            }
+            
+            .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 9pt;
+            }
+            
+            .items-table th, .items-table td {
+            border: 1px dotted #000;
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+            }
+            
+            .items-table th {
+            background-color: #e3e3e3;
+            font-weight: bold;
+            font-size: 9pt;
+            }
+            
+            .items-table td.location-cell {
+            text-align: left;
+            font-size: 8pt;
+            }
+            
+            .items-table td.product-cell {
+            text-align: left;
+            font-size: 8pt;
+            }
+            
+            .items-table td.description-cell {
+            text-align: left;
+            font-size: 8pt;
+            }
+            
+            .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            }
+            
+            .summary-table td {
+            padding: 5px;
+            border: 1px solid #000;
+            }
+            
+            .summary-table .label {
+            font-weight: bold;
+            width: 30%;
+            }
+            
+            .terms-section {
+            margin-top: 20px;
+            font-size: 9pt;
+            }
+            
+            .signature-area {
+            margin-top: 40px;
+            width: 100%;
+            }
+            
+            .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 30px;
+            width: 60%;
+            }
+            
+            .text-right {
+            text-align: right;
+            }
+            
+            .text-center {
+            text-align: center;
+            }
+            
+            .bold {
+            font-weight: bold;
+            }
+            
+            .page-break {
+            page-break-before: always;
+            }
+            
+            .header-table { width:100%; border-collapse:collapse; }
+            .header-table td { vertical-align:top; }
+            .header-table .left  { width:58%; padding-right:20pt; }
+            .header-table .right { width:42%; text-align: left; padding-left: 20pt;}
+            h3 { margin:0 0 6pt 0; }
+            .header-table tr.space-row td { padding-top:20pt; }
+            .header-table-margin {margin-left: 5px;}
+            
+            .totals-row {
+                margin-bottom: 5px;
+                display: flex;
+                justify-content: space-between;
+            }
+            
+            .totals-label {
+                font-weight: bold;
+                min-width: 180px;
+                display: inline-block;
+            }
+            
+            .totals-value {
+                text-align: right;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div class="header">
+            <div class="logo">
+                <img src="{!$Resource.FloorworldLogo}" alt="Floorworld LLC" width="250"/>  
+            </div>
+            <div class="quote-title">
+                <h2>Quotation</h2>
+                <div class="quote-number">#{!quote.QuoteNumber}</div>
+                <div class="quote-date">Date: <apex:outputText value="{0,date,M/d/yyyy}"><apex:param value="{!quote.CreatedDate}"/></apex:outputText></div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>
+                <strong>Floorworld LLC</strong><br/>
+                Floorworld Building, Dubai Investment Park<br/>
+                DIP 2, Dubai Po Box 212349, United Arab Emirates
+            </div>
+        </div>
+        <table class="header-table">
+            <tr>
+                <td class="left">
+                    <h3>Floorworld LLC</h3>
+                    <div>DXB-Head Office</div>
+                    <div>DIP 2 Plot 597-733, Dubai Investment Park 2, Dubai</div>
+                    <div>04 889 5661</div>
+                    <div>TRN: 100051766200003</div>
+                </td>
+                
+                <td class="right">
+                    <div><b>Sales Person:</b><span class="header-table-margin">{!quote.Owner.Name}</span></div>
+                    <div><b>Deal/Project Name:</b><span class="header-table-margin">{!quote.Name}</span></div>
+                </td>
+            </tr>
+            <tr class="space-row">
+                <td class="left">
+                    <h3>Bill To</h3>
+                    <div>{!quote.Account.Name}</div>
+                    <div>{!quote.Account.BillingStreet}</div>
+                    <div>{!quote.Account.BillingCity} {!quote.Account.BillingState}</div>
+                    <div>{!quote.Account.BillingCountry}</div>
+                    <div>TRN: </div>
+                </td>
+                
+                <td class="right">
+                    <div><b>Customer:</b><span class="header-table-margin">{!quote.Account.AccountNumber} {!quote.Account.Name}</span></div>
+                    <div><b>Contact Name:</b><span class="header-table-margin">{!quote.Account.Name}</span></div>
+                    <div><b>Phone No.:</b><span class="header-table-margin">{!quote.Account.Phone}</span></div>
+                    <div><b>Mobile No.:</b><span class="header-table-margin">{!quote.Account.Phone}</span></div>
+                    <div><b>Email:</b><span class="header-table-margin">{!quote.Email}</span></div>
+                    <div><b>Delivery Address:</b><span class="header-table-margin">{!quote.Account.ShippingStreet}, {!quote.Account.ShippingCity}, {!quote.Account.ShippingState},
+                        {!quote.Account.ShippingCountry}</span></div>
+                </td>
+            </tr>
+        </table>
+        
+        <br/><br/>
+        
+        <div class="clear"></div>
+        
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th width="4%">#</th>
+                    <th width="18%">Location</th>
+                    <th width="15%">Products</th>
+                    <th width="20%">Description</th>
+                    <th width="8%">Pallets</th>
+                    <th width="8%">QTY<br/>(Main)</th>
+                    <th width="8%">QTY<br/>(Sub)</th>
+                    <th width="9%">Unit Rate</th>
+                    <th width="10%">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:variable var="rowNumber" value="{!1}"/>
+                <apex:repeat value="{!quoteLineItems}" var="item">
                     <tr>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th>Total Price</th>
+                        <td>{!rowNumber}</td>
+                        <td class="location-cell">{!item.Location__c}</td>
+                        <td class="product-cell">{!item.Product2.ProductCode} {!item.Product2.Name}</td>
+                        <td class="description-cell">{!item.Description}</td>
+                        <td><!--apex:outputText value="{0,number,#,##0.##}"><apex:param value="{!item.Pallets__c}"/></apex:outputText--></td>
+                        <td><apex:outputText value="{0,number,#,##0}"><apex:param value="{!item.Quantity}"/></apex:outputText></td>
+                        <td><!--apex:outputText value="{0,number,#,##0.####}"><apex:param value="{!item.Sub_Quantity__c}"/></apex:outputText> {!item.UnitOfMeasure}!--></td>
+                        <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
+                        <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.TotalPrice}"/></apex:outputText></td>
                     </tr>
-                </thead>
-                <tbody>
-                    <apex:repeat value="{!Quote.QuoteLineItems}" var="line">
-                        <tr>
-                            <td>{!line.Product2.Name}</td>
-                            <td>{!line.Quantity}</td>
-                            <td><apex:outputText value="{0, number, currency}">
-                                <apex:param value="{!line.UnitPrice}" />
-                                </apex:outputText></td>
-                            <td><apex:outputText value="{0, number, currency}">
-                                <apex:param value="{!line.TotalPrice}" />
-                                </apex:outputText></td>
-                        </tr>
-                    </apex:repeat>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="3" align="right"><strong>Grand Total:</strong></td>
-                        <td><apex:outputText value="{0, number, currency}">
-                            <apex:param value="{!Quote.TotalPrice}" />
-                            </apex:outputText></td>
-                    </tr>
-                </tfoot>
+                    <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
+                </apex:repeat>
+            </tbody>
+        </table>
+        
+        <table class="header-table">
+            <tr>
+                <td class="left">
+                </td>
+                
+                <td class="right">
+                    <div class="totals-row">
+                        <span class="totals-label">Total</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Subtotal}"/></apex:outputText></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Discount Amount</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Discount}"/></apex:outputText></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Total Taxable Amount</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Subtotal - quote.Discount}"/></apex:outputText></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Tax %</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Discount}"/></apex:outputText></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Tax Amount</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Discount}"/></apex:outputText></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Grand Total</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.TotalPrice}"/></apex:outputText></span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <div style="margin-top: 20px;">
+            <div class="section-title">Tax Summary</div>
+            <table class="summary-table">
+                <tr>
+                    <th width="70%">Tax Details</th>
+                    <th width="15%">Taxable Amount</th>
+                    <th width="15%">Tax</th>
+                </tr>
+                <tr>
+                    <td>VAT 5%</td>
+                    <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Subtotal - quote.Discount}"/></apex:outputText></td>
+                    <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Tax}"/></apex:outputText></td>
+                </tr>
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td></td>
+                    <td><strong>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.TotalPrice}"/></apex:outputText></strong></td>
+                </tr>
             </table>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <table class="summary-table">
+                <tr>
+                    <td class="label">Supply Type</td>
+                    <td>{!quote.Supply_Type__c}</td>
+                </tr>
+                <tr>
+                    <td class="label">Goods Available</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="label">Shipping Method</td>
+                    <td>{!quote.Shipping_Method__c}</td>
+                </tr>
+                <tr>
+                    <td class="label">Payment Terms</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="label">Quote Validity</td>
+                    <td><apex:outputText value="{0,date,M/d/yyyy}"><apex:param value="{!quote.ExpirationDate}"/></apex:outputText></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <div class="section-title">Other Instructions</div>
+            <ol>
+                <li>Sub floor condition and level needs to be check after removal of existing skirting.</li>
+                <li>Any superficial damage to wall following the removal of existing skirting will not be responsibility of Floorworld.</li>
+                <li>Any additional material or works required will be charged separately.</li>
+                <li>No Skirting in the staircase. Existing marble skirting will not be removed.</li>
+            </ol>
+        </div>
+        
+        <div class="signature-area">
+            <p>I, ______ hereby agree to the products, specifications, quantity, price and general terms stated above and inclusive of the points listed in "Other Instructions"</p>
             
-            <div class="terms">
-                <h3>Terms and Conditions</h3>
-                <p>All prices are valid for 30 days from the quote date.</p>
-                <p>Payment terms: Net 30 days from invoice date.</p>
-                <p>Delivery: Within 2 weeks of order confirmation.</p>
+            <div style="margin-top: 40px;">
+                <div class="signature-line"></div>
+                <div>Name</div>
             </div>
             
-            <!-- This space is reserved for Zoho Sign signature placement -->
-            <div class="signature-area">
-                <p>Signature: _________________________________________</p>
-                <p>Date: ________________________</p>
+            <div style="margin-top: 20px;">
+                <div class="signature-line"></div>
+                <div>Signature</div>
             </div>
-        </body>
-    </html>
+            
+            <div style="margin-top: 20px;">
+                <div class="signature-line"></div>
+                <div>Title</div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <div class="signature-line"></div>
+                <div>Designation</div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <div class="signature-line" style="width: 40%;"></div>
+                <div>Stamp</div>
+            </div>
+        </div>
+        
+        <div class="page-break">
+            <div class="terms-section">
+                <div class="section-title">Quotation Terms and Conditions</div>
+                
+                <p><strong>1. Cancellations</strong> - We will consider, but not be bound to accept, any request for cancellation of an order, and acceptance shall be on such terms as may be agreed by us in writing. We reserve the right to levy an administration charge (minimum 25%) together with any manufacturing costs incurred whilst processing an order. No requests for cancellation will be considered for all Engineers' wood flooring, wood accessories or where it is a custom design, has been specially purchased locally or internationally as a non-stock item. No requests for cancellation will be considered more than 1 month after Sales Order confirmation date.</p>
+                
+                <p><strong>2. Returns</strong> - We do not normally accept the return of perfect goods if correctly supplied as ordered. We therefore strongly recommend that customers check quantity, colour and product requirements carefully before ordering. If goods are accepted for return at the company's discretion, we reserve the right to levy an administration charge (minimum 25%) together with carriage.</p>
+                
+                <p><strong>3. Storage and Delivery</strong> - Delivery as mentioned in the shipment method will only commence when received cash or cleared funds in our bank account. This will exclude Saturdays and Sundays and placed the next working day that follows.</p>
+                
+                <p><strong>3.A</strong> We reserve the right to charge a storage fee of 500 Dhs/month for goods held in our warehouse for a period over one (1) month. This will commence on or after 30 days from date of Sales Order confirmation or 30days from the no. of days/weeks given in the shipment method.</p>
+                
+                <p><strong>4. Collections</strong> - Arrangements can be made for collection from our premises by advance notice and agreement. Usually Monday to Friday (8 a.m. to 5 p.m.) excluding public holidays. We kindly request customers, however, to make such arrangements well in advance of intended collection of goods required. We regret that we cannot accept any claims whatsoever in such cases, if goods are unavailable at the time of collection. All promises of stock availability are given in good faith, but should not be regarded as guaranteed correct.</p>
+                
+                <p><strong>5. Settlement</strong> - Cleared funds are required from non-credit account customers before goods can be released from our warehouse. Prepayment may be made by cleared cheque from a recognized U.A.E bank, cash, credit card or direct bank transfer. Note: This must be a minimum of 3 days prior to the agreed delivery date or on collection from our warehouse.</p>
+                
+                <p><strong>6. Acclimatization</strong> - A maintained ambient room temperature of between 18-26 degrees celsius is required prior to, during and after installation. Relative humidity levels between 30 - 60% also need to be present. All flooring products require 24 hours acclimatization with temperatures to remain between 18 - 26 degrees Celsius, relative humidity levels between 30 - 60% also need to be present. Failure to maintain these conditions may result in damaging the installed goods and null and void your warranty.</p>
+                
+                <p><strong>7. Installations</strong> - Floorworld will make every effort to start and complete each installation within the estimated time frame, due to the nature of the work installation times may overrun due to various factors that may be out of the control of Floorworld. The company reserves the right to alter both start and completions dates due to operational or exceptional circumstances, this sales order does not constitute a written contract relating to the schedule or duration of the installation process.</p>
+                
+                <p><strong>7.A</strong> Rooms must be empty and clean and all existing floor coverings removed. If Floorworld LLC are required to remove any furniture and/ or existing floor coverings then an additional charges will be levied. This charge will be agreed prior to any commencement of work. All furniture such as cabinets and wardrobes must be emptied by the client prior to work commence to avoid damage to the contents. Floorworld LLC will not accept responsibility for any damage caused in moving furniture/appliances.</p>
+                
+                <p><strong>7.B</strong> Doors will only be removed and re-hung where there is no alteration to the floor height. If doors require re-fitting, an additional charge of AED 100.00 per door will be levied.</p>
+                
+                <p><strong>7.C</strong> Those responsible for the design and construction of the sub floor should ensure that it meets the requirements for hardness, levels and surface regularities (BS 8204-1:2003+Amendment 1:2009), dryness and other design parameters. On inspection, prior to commencement, if a subfloor is found to be unsuitable, rectification work must be carried out - additional work required will incur an additional charge. Where the subfloor is not sufficiently dry, an Epoxy Damp Proof Membrane (or any other specified) may be recommended prior to installation of the flooring - at an additional cost. If any recommendation is not implemented, then Floorworld LLC will not offer any guarantee for the installation of the flooring. For each flooring installation that Floorworld undertakes, Floorworld will conduct all necessary moisture tests to the walls and subfloor to ensure suitability, if moisture readings above 10% are present then remedial work will be needed at extra cost prior to the installation commencing. Once all flooring, skirting and profiles have been installed it is the responsibility of the client/homeowner to ensure the property is adequately protected against the manifestation of moisture or mould within the walls and subfloor. The failure of skirting, profiles or flooring due to damage from moisture or mould after installation will not be covered under any product warranty if moisture readings of higher than 10% are found to be present.</p>
+                
+                <p><strong>7.D</strong> Adequate lighting is required and should be supplied by the client to ensure accurate cutting and laying of flooring materials.</p>
+                
+                <p><strong>7.E</strong> Electricity supply is required and should be supplied by the client.</p>
+                
+                <p><strong>7.F</strong> The client must provide Water supply in order to mix certain products. This is particularly relevant for preparation and levelling work.</p>
+                
+                <p><strong>7.G</strong> Bathroom and toilet areas should have the bath panel, sink pedestal, toilet and any other standing units removed (prior to commencement of works) to enable a correctly finished floor. Floorworld LLC are not authorized or qualified to disconnect or re-connect any type of appliances. Kitchen areas should have (prior to commencement of works) the plinths removed from the units and, where floors are to be taken under electrical appliances, e.g. Fridges, freezers, tumble dryers, dish washers, washing machines etc., it is the clients responsibility to ensure they have been removed safely and all plumbing and wiring has been disconnected.</p>
+                
+                <p><strong>7.H</strong> With every installation the flooring planks will be installed in a completely random configuration, should you wish the floor to be installed in any other configuration such as brick bond then this must be highlighted to the Sales Person at the point of order to ensure extra wastage has been added to the final quantity to achieve the desired effect.</p>
+                
+                <p><strong>7.I</strong> It is the client/homeowners responsibility to ensure the property is protected against termites or wood boring insects, such manifestations and subsequent damage thereby caused are not covered under any product warranty.</p>
+                
+                <p><strong>8. Protection</strong> - Protection of the installed floor will be the responsibility of the client/main contractor. Floorworld LLC will not be responsible for damage incurred by the client or other trades after installation is completed. All types of flooring must be protected from receiving surface scratches while moving furniture, all furniture legs should have self-adhesive felt pads or similar attached to prevent surface scratches from taking place, if such scratches do occur they not be deemed as a product fault and will not be covered under warranty from either Floorworld or the manufacturer.</p>
+                
+                <p><strong>9. Title To Goods</strong> - We reserve the right to retain, if we should so decide, the title to goods supplied under these terms of sale until the purchaser has discharged all sums owing to us. Until such discharge, the purchaser shall hold the goods, whether or not sold to another party upon trust for ourselves and grant us the right, if we so wish, to enter the purchaser's or its agent's premises to recover any such goods. Please note: If you experience any difficulties with, or are unsure of any of the points contained within the Terms and Conditions, please do not hesitate to contact Floorworld LLC by telephone on 04 889 5661 email to sales@floorworld.com</p>
+                
+                <div class="signature-area">
+                    <p>I, _________________________, hereby agree to FLOORWORLD Terms and Conditions listed above.</p>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="signature-line"></div>
+                        <div>Name</div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="signature-line"></div>
+                        <div>Signature</div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="signature-line"></div>
+                        <div>Title/Designation</div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="signature-line" style="width: 40%;"></div>
+                        <div>Stamp</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
 </apex:page>
