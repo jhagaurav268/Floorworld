@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Forecast_Type__c</fullName>
+    <label>Forecast Type</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Omitted</fullName>
+                <default>false</default>
+                <label>Omitted</label>
+            </value>
+            <value>
+                <fullName>Worst Case</fullName>
+                <default>false</default>
+                <label>Worst Case</label>
+            </value>
+            <value>
+                <fullName>Most Likely</fullName>
+                <default>false</default>
+                <label>Most Likely</label>
+            </value>
+            <value>
+                <fullName>Upside</fullName>
+                <default>false</default>
+                <label>Upside</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Preferred_Team__c</fullName>
+    <label>Preferred Team</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : OM - Team 01</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : OM - Team 01</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 001</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 001</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 002</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 002</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 003</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 003</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 004</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 004</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 005</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 005</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 006</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 006</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 007</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 007</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 008</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 008</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 009</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 009</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 010</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 010</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 011</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 011</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 012</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 012</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 013</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 013</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 014</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 014</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 015</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 015</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 016</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 016</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 017</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 017</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 018</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 018</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 019</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 019</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 020</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 020</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 021</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 021</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 022</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 022</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 023</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 023</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 024</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 024</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 025</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 025</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 026</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 026</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 027</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 027</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 028</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 028</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 029</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 029</label>
+            </value>
+            <value>
+                <fullName>CEO : MGMT : OPS : Inst. : Inst. Team : Team 030</fullName>
+                <default>false</default>
+                <label>CEO : MGMT : OPS : Inst. : Inst. Team : Team 030</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

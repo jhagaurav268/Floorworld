@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Supply_Type__c</fullName>
+    <label>Supply Type</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Supply &amp; Installation</fullName>
+                <default>false</default>
+                <label>Supply &amp; Installation</label>
+            </value>
+            <value>
+                <fullName>Supply Only</fullName>
+                <default>false</default>
+                <label>Supply Only</label>
+            </value>
+            <value>
+                <fullName>Supply With Delivery</fullName>
+                <default>false</default>
+                <label>Supply With Delivery</label>
+            </value>
+            <value>
+                <fullName>Installation Only</fullName>
+                <default>false</default>
+                <label>Installation Only</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sales_Process_Status__c</fullName>
+    <label>Sales Process Status</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Pending Review</fullName>
+                <default>false</default>
+                <label>Pending Review</label>
+            </value>
+            <value>
+                <fullName>Stock Is Not Available</fullName>
+                <default>false</default>
+                <label>Stock Is Not Available</label>
+            </value>
+            <value>
+                <fullName>Stock Is Available</fullName>
+                <default>false</default>
+                <label>Stock Is Available</label>
+            </value>
+            <value>
+                <fullName>Pending Site Inspection</fullName>
+                <default>false</default>
+                <label>Pending Site Inspection</label>
+            </value>
+            <value>
+                <fullName>Site Is Ready</fullName>
+                <default>false</default>
+                <label>Site Is Ready</label>
+            </value>
+            <value>
+                <fullName>Pending Payment</fullName>
+                <default>false</default>
+                <label>Pending Payment</label>
+            </value>
+            <value>
+                <fullName>Pending Pass &amp; Permit</fullName>
+                <default>false</default>
+                <label>Pending Pass &amp; Permit</label>
+            </value>
+            <value>
+                <fullName>Pending Installation</fullName>
+                <default>false</default>
+                <label>Pending Installation</label>
+            </value>
+            <value>
+                <fullName>Installation In Progress</fullName>
+                <default>false</default>
+                <label>Installation In Progress</label>
+            </value>
+            <value>
+                <fullName>Installation Completed</fullName>
+                <default>false</default>
+                <label>Installation Completed</label>
+            </value>
+            <value>
+                <fullName>Pending After Sales</fullName>
+                <default>false</default>
+                <label>Pending After Sales</label>
+            </value>
+            <value>
+                <fullName>After Sales Completed</fullName>
+                <default>false</default>
+                <label>After Sales Completed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

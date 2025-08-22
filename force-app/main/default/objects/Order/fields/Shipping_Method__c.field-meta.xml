@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Shipping_Method__c</fullName>
+    <label>Shipping Method</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>EX Works</fullName>
+                <default>false</default>
+                <label>EX Works</label>
+            </value>
+            <value>
+                <fullName>Delivery</fullName>
+                <default>false</default>
+                <label>Delivery</label>
+            </value>
+            <value>
+                <fullName>Collection</fullName>
+                <default>false</default>
+                <label>Collection</label>
+            </value>
+            <value>
+                <fullName>Air Freight</fullName>
+                <default>false</default>
+                <label>Air Freight</label>
+            </value>
+            <value>
+                <fullName>Sea Freight</fullName>
+                <default>false</default>
+                <label>Sea Freight</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

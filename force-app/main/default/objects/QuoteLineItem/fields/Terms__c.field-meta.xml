@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Terms__c</fullName>
+    <label>Terms</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>1% 10 Net 30</fullName>
+                <default>false</default>
+                <label>1% 10 Net 30</label>
+            </value>
+            <value>
+                <fullName>10% Advance, 90% LC -(60 Days)</fullName>
+                <default>false</default>
+                <label>10% Advance, 90% LC -(60 Days)</label>
+            </value>
+            <value>
+                <fullName>10% Advance, 90% Prior to Del.</fullName>
+                <default>false</default>
+                <label>10% Advance, 90% Prior to Del.</label>
+            </value>
+            <value>
+                <fullName>100% Advance</fullName>
+                <default>false</default>
+                <label>100% Advance</label>
+            </value>
+            <value>
+                <fullName>100% On B/L</fullName>
+                <default>false</default>
+                <label>100% On B/L</label>
+            </value>
+            <value>
+                <fullName>100% On Order Confirmation</fullName>
+                <default>false</default>
+                <label>100% On Order Confirmation</label>
+            </value>
+            <value>
+                <fullName>2% 10 Net 30</fullName>
+                <default>false</default>
+                <label>2% 10 Net 30</label>
+            </value>
+            <value>
+                <fullName>20% Advance, 80% LC -(60 Days)</fullName>
+                <default>false</default>
+                <label>20% Advance, 80% LC -(60 Days)</label>
+            </value>
+            <value>
+                <fullName>25% Adv &amp; 75% Prior Delivery</fullName>
+                <default>false</default>
+                <label>25% Adv &amp; 75% Prior Delivery</label>
+            </value>
+            <value>
+                <fullName>30 Days From Invoice</fullName>
+                <default>false</default>
+                <label>30 Days From Invoice</label>
+            </value>
+            <value>
+                <fullName>30 Days from Order Confirmation</fullName>
+                <default>false</default>
+                <label>30 Days from Order Confirmation</label>
+            </value>
+            <value>
+                <fullName>30 Days Net Invoice</fullName>
+                <default>false</default>
+                <label>30 Days Net Invoice</label>
+            </value>
+            <value>
+                <fullName>30% Adv &amp; 70% Prior Delivery</fullName>
+                <default>false</default>
+                <label>30% Adv &amp; 70% Prior Delivery</label>
+            </value>
+            <value>
+                <fullName>30% Adv - 70% On Bol</fullName>
+                <default>false</default>
+                <label>30% Adv - 70% On Bol</label>
+            </value>
+            <value>
+                <fullName>30% Adv 40% A/F Del 30% on Com</fullName>
+                <default>false</default>
+                <label>30% Adv 40% A/F Del 30% on Com</label>
+            </value>
+            <value>
+                <fullName>30% Advance, 70% LC -(60 Days)</fullName>
+                <default>false</default>
+                <label>30% Advance, 70% LC -(60 Days)</label>
+            </value>
+            <value>
+                <fullName>40% Adv - 60% On Bol</fullName>
+                <default>false</default>
+                <label>40% Adv - 60% On Bol</label>
+            </value>
+            <value>
+                <fullName>40% Adv 40% B/F Del 20% on Com</fullName>
+                <default>false</default>
+                <label>40% Adv 40% B/F Del 20% on Com</label>
+            </value>
+            <value>
+                <fullName>50 Ad,20 on MT,20 Prog,10% A/W</fullName>
+                <default>false</default>
+                <label>50 Ad,20 on MT,20 Prog,10% A/W</label>
+            </value>
+            <value>
+                <fullName>50% ADV - 50% On BOL</fullName>
+                <default>false</default>
+                <label>50% ADV - 50% On BOL</label>
+            </value>
+            <value>
+                <fullName>50% Adv - 50% On Completion</fullName>
+                <default>false</default>
+                <label>50% Adv - 50% On Completion</label>
+            </value>
+            <value>
+                <fullName>50% ADV - 50% On DEL</fullName>
+                <default>false</default>
+                <label>50% ADV - 50% On DEL</label>
+            </value>
+            <value>
+                <fullName>50% ADV, 25% progress, 25% Comp</fullName>
+                <default>false</default>
+                <label>50% ADV, 25% progress, 25% Comp</label>
+            </value>
+            <value>
+                <fullName>50% Adv, 45% B/F Del, 5% on Com</fullName>
+                <default>false</default>
+                <label>50% Adv, 45% B/F Del, 5% on Com</label>
+            </value>
+            <value>
+                <fullName>50% Adv, 50% 10Day PDC Af. Inst</fullName>
+                <default>false</default>
+                <label>50% Adv, 50% 10Day PDC Af. Inst</label>
+            </value>
+            <value>
+                <fullName>50% Adv,40% B/F Del, 10% on Com</fullName>
+                <default>false</default>
+                <label>50% Adv,40% B/F Del, 10% on Com</label>
+            </value>
+            <value>
+                <fullName>50% adv. &amp; 50% prior delivery</fullName>
+                <default>false</default>
+                <label>50% adv. &amp; 50% prior delivery</label>
+            </value>
+            <value>
+                <fullName>50% Adv. 30% on Del, 20% on Com</fullName>
+                <default>false</default>
+                <label>50% Adv. 30% on Del, 20% on Com</label>
+            </value>
+            <value>
+                <fullName>50%M.ADV,50%M.B/F Del,100% Comp</fullName>
+                <default>false</default>
+                <label>50%M.ADV,50%M.B/F Del,100% Comp</label>
+            </value>
+            <value>
+                <fullName>60 Days from Order Confirmation</fullName>
+                <default>false</default>
+                <label>60 Days from Order Confirmation</label>
+            </value>
+            <value>
+                <fullName>60 Days Net Invoice</fullName>
+                <default>false</default>
+                <label>60 Days Net Invoice</label>
+            </value>
+            <value>
+                <fullName>60 Days On receipt Of Bol</fullName>
+                <default>false</default>
+                <label>60 Days On receipt Of Bol</label>
+            </value>
+            <value>
+                <fullName>60 Days On Receipt of Goods</fullName>
+                <default>false</default>
+                <label>60 Days On Receipt of Goods</label>
+            </value>
+            <value>
+                <fullName>70% Adv 20% P/del &amp; 10% on Com</fullName>
+                <default>false</default>
+                <label>70% Adv 20% P/del &amp; 10% on Com</label>
+            </value>
+            <value>
+                <fullName>70% Adv 30% Prior to Del.</fullName>
+                <default>false</default>
+                <label>70% Adv 30% Prior to Del.</label>
+            </value>
+            <value>
+                <fullName>70% Adv,30% Before Installation</fullName>
+                <default>false</default>
+                <label>70% Adv,30% Before Installation</label>
+            </value>
+            <value>
+                <fullName>70% Adv. With LPO, 30% On Comp.</fullName>
+                <default>false</default>
+                <label>70% Adv. With LPO, 30% On Comp.</label>
+            </value>
+            <value>
+                <fullName>80% Advance, 20% on Completion</fullName>
+                <default>false</default>
+                <label>80% Advance, 20% on Completion</label>
+            </value>
+            <value>
+                <fullName>90 Days Net Invoice</fullName>
+                <default>false</default>
+                <label>90 Days Net Invoice</label>
+            </value>
+            <value>
+                <fullName>90% Advance, 10% after Installa</fullName>
+                <default>false</default>
+                <label>90% Advance, 10% after Installa</label>
+            </value>
+            <value>
+                <fullName>95% Advance, 5% on Completion</fullName>
+                <default>false</default>
+                <label>95% Advance, 5% on Completion</label>
+            </value>
+            <value>
+                <fullName>As Per Signed Contract</fullName>
+                <default>false</default>
+                <label>As Per Signed Contract</label>
+            </value>
+            <value>
+                <fullName>Cash</fullName>
+                <default>false</default>
+                <label>Cash</label>
+            </value>
+            <value>
+                <fullName>Cash / Cheque On Collection</fullName>
+                <default>false</default>
+                <label>Cash / Cheque On Collection</label>
+            </value>
+            <value>
+                <fullName>Cash / Cheque On Delivery</fullName>
+                <default>false</default>
+                <label>Cash / Cheque On Delivery</label>
+            </value>
+            <value>
+                <fullName>Due on receipt</fullName>
+                <default>false</default>
+                <label>Due on receipt</label>
+            </value>
+            <value>
+                <fullName>Free of Charge</fullName>
+                <default>false</default>
+                <label>Free of Charge</label>
+            </value>
+            <value>
+                <fullName>LC (Terms To Be Agreed)</fullName>
+                <default>false</default>
+                <label>LC (Terms To Be Agreed)</label>
+            </value>
+            <value>
+                <fullName>LPO - 100% Prior to Delivery</fullName>
+                <default>false</default>
+                <label>LPO - 100% Prior to Delivery</label>
+            </value>
+            <value>
+                <fullName>LPO 100% up on completion</fullName>
+                <default>false</default>
+                <label>LPO 100% up on completion</label>
+            </value>
+            <value>
+                <fullName>Net 15</fullName>
+                <default>false</default>
+                <label>Net 15</label>
+            </value>
+            <value>
+                <fullName>Net 30</fullName>
+                <default>false</default>
+                <label>Net 30</label>
+            </value>
+            <value>
+                <fullName>Net 60</fullName>
+                <default>false</default>
+                <label>Net 60</label>
+            </value>
+            <value>
+                <fullName>Net 75, From BL Date</fullName>
+                <default>false</default>
+                <label>Net 75, From BL Date</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

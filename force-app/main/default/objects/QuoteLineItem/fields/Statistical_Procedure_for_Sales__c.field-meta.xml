@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Statistical_Procedure_for_Sales__c</fullName>
+    <label>Statistical Procedure for Sales</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>00 - Regular import (ICV) and export (ICL)</fullName>
+                <default>false</default>
+                <label>00 - Regular import (ICV) and export (ICL)</label>
+            </value>
+            <value>
+                <fullName>02 - Re-export or dispatch of unprocessed goods, in domestice ownership.</fullName>
+                <default>false</default>
+                <label>02 - Re-export or dispatch of unprocessed goods, in domestice ownership.</label>
+            </value>
+            <value>
+                <fullName>03.b - Dispatch (ICL) of unprocessed goods which have been cleared or arrived in the Netherlands, which are intended for another EU member state. (sale)</fullName>
+                <default>false</default>
+                <label>03.b - Dispatch (ICL) of unprocessed goods which have been cleared or arrived in the Netherlands, which are intended for another EU member state. (sale)</label>
+            </value>
+            <value>
+                <fullName>04 - Arrival/dispatch before stock movements (sales and purchases)</fullName>
+                <default>false</default>
+                <label>04 - Arrival/dispatch before stock movements (sales and purchases)</label>
+            </value>
+            <value>
+                <fullName>05 - Arrival/dispatch after stock movements (sales and purchases)</fullName>
+                <default>false</default>
+                <label>05 - Arrival/dispatch after stock movements (sales and purchases)</label>
+            </value>
+            <value>
+                <fullName>10000 - Final dispatch</fullName>
+                <default>false</default>
+                <label>10000 - Final dispatch</label>
+            </value>
+            <value>
+                <fullName>17 - Simplified ABC-transaction</fullName>
+                <default>false</default>
+                <label>17 - Simplified ABC-transaction</label>
+            </value>
+            <value>
+                <fullName>18 - Delivery not to ICT-list</fullName>
+                <default>false</default>
+                <label>18 - Delivery not to ICT-list</label>
+            </value>
+            <value>
+                <fullName>19 - Delivery to ICT-list, not to CBS</fullName>
+                <default>false</default>
+                <label>19 - Delivery to ICT-list, not to CBS</label>
+            </value>
+            <value>
+                <fullName>22002 - Temporary dispatch for processing</fullName>
+                <default>false</default>
+                <label>22002 - Temporary dispatch for processing</label>
+            </value>
+            <value>
+                <fullName>31514 - Re-dispatch after processing</fullName>
+                <default>false</default>
+                <label>31514 - Re-dispatch after processing</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
