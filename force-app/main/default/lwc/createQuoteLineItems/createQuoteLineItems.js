@@ -525,7 +525,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
 
     async loadProductSuggestions(searchKey) {
         try {
-            const result = await searchProductItems({ searchKey });
+            const result = await searchProductItems({ searchKey: searchKey, quoteId: this.recordId  });
             this.filteredProducts = result || [];
         } catch (error) {
             console.error('Error fetching product suggestions', error);

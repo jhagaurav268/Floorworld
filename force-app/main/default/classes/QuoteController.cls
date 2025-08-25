@@ -155,7 +155,7 @@ public class QuoteController {
             Map<String, QuoteLineItem> rowIdToQliMap = new Map<String, QuoteLineItem>();
             Id quoteId;
             
-            Pricebook2 floorWorldPB = [SELECT Id FROM Pricebook2 WHERE Name = 'Floor World Price Book' AND IsActive = true LIMIT 1];
+            Pricebook2 floorWorldPB = [SELECT Id FROM Pricebook2 WHERE Name = 'Standard Price Book' AND IsActive = true LIMIT 1];
             
             Set<Id> productIds = new Set<Id>();
             for (QuoteLineItemWrapper item : lineItems) {
@@ -278,19 +278,31 @@ public class QuoteController {
     }
     
     @AuraEnabled(cacheable=true)
-    public static List<PricebookEntry> searchProductItems(String searchKey) {
-        Pricebook2 pb = [SELECT Id FROM Pricebook2 WHERE Name = 'Floor World Price Book' AND IsActive = true LIMIT 1];
+    public static List<PricebookEntry> searchProductItems(String searchKey, Id quoteId) {
+        Quote q = [
+            SELECT CurrencyIsoCode, Pricebook2Id 
+            FROM Quote 
+            WHERE Id = :quoteId 
+            LIMIT 1
+        ];
         
-        if (pb == null) {
+        if (q.Pricebook2Id == null) {
             return new List<PricebookEntry>();
         }
         
         String query = '%' + searchKey + '%';
         
-        return [SELECT Product2.Name, Product2.ProductCode, UnitPrice, Product2.Description, Product2.Family, Product2.Primary_Sale_Unit__c, Product2.Width_m__c,
-                Product2.Average_Cost__c, Id
-                FROM PricebookEntry 
-                WHERE Pricebook2.Id =: pb.Id AND Product2.Name LIKE :query AND IsActive = true LIMIT 10];
+        return [
+            SELECT Product2.Name, Product2.ProductCode, UnitPrice, Product2.Description, 
+            Product2.Family, Product2.Primary_Sale_Unit__c, Product2.Width_m__c,
+            Product2.Average_Cost__c, Id, CurrencyIsoCode
+            FROM PricebookEntry 
+            WHERE Pricebook2Id = :q.Pricebook2Id
+            AND Product2.Name LIKE :query
+            AND CurrencyIsoCode = :q.CurrencyIsoCode
+            AND IsActive = true
+            LIMIT 10
+        ];
     }
     
     public class QuoteLineItemWrapper {
