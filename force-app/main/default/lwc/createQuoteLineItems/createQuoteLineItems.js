@@ -285,8 +285,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         const discountRate = parseInt(match[1]);
 
         const discountAmount = (this.safeParseFloat(targetRow.grossAmount) * discountRate) / 100;
-        const discountRateAmount = (this.safeParseFloat(targetRow.rate) * discountRate) / 100;
-        const discountUnitPrice = (this.safeParseFloat(targetRow.unitPriceSub) * discountRate) / 100;
+        const discountRateAmount = discountRate;
+        const discountUnitPrice = discountRate;
         const discountAmountOnly = (this.safeParseFloat(targetRow.amount) * discountRate) / 100;
         const discountTaxAmount = (this.safeParseFloat(targetRow.taxAmount) * discountRate) / 100;
 
