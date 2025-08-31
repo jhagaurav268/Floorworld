@@ -835,7 +835,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         try {
             await this.createQuoteLineItemData();
         } catch (error) {
-            this.showToast('Error', 'Failed to save items', 'error');
+            console.log('error is ',error);
         } finally {
             this.isLoading = false;
         }
@@ -862,7 +862,8 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             this.showToast('Success', 'Quote Line Items saved successfully!', 'success');
             this.deletedRowIds = [];
         } catch (error) {
-            throw new Error(error.body?.message || 'Failed to save items');
+            this.showToast('Error', error.body?.message, 'error');
+            throw new Error(error.body?.message);
         }
     }
 
