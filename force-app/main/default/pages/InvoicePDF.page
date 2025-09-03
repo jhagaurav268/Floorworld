@@ -1,0 +1,487 @@
+<apex:page applyBodyTag="false" showHeader="false" sidebar="false" standardStylesheets="false" renderAs="pdf" controller="InvoicePdfController">
+    <head>
+        <style>
+            @page {
+            size: A4 portrait;
+            margin: 30mm 10mm 25mm 10mm;
+            @bottom-left {
+            content: element(footer);
+            }
+            @top-center {
+            content: element(header);
+            }
+            }
+            
+            div.header {
+            position: running(header);
+            text-align: center;
+            margin-top: 48px;
+            }
+            
+            div.footer {
+            position: running(footer);
+            }
+            
+            .pagenumber:before {
+            content: counter(page);
+            }
+            
+            .pagecount:before {
+            content: counter(pages);
+            }
+            
+            body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #000;
+            line-height: 1.2;
+            }
+            
+            .main-header {
+            width: 100%;
+            margin-bottom: 20px;
+            }
+            
+            .order-title {
+            float: left;
+            text-align: left;
+            width: 45%;
+            }
+            
+            .order-title h2 {
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 0;
+            }
+            
+            .logo{
+            float: right;
+            text-align: right;
+            }
+            
+            .order-number {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 5px 0;
+            }
+            
+            .order-date {
+            font-size: 10pt;
+            margin: 5px 0;
+            }
+            
+            .company-section {
+            float: left;
+            width: 50%;
+            margin-top: 20px;
+            }
+            
+            .company-info h3 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            }
+            
+            .bill-to-section {
+            float: right;
+            width: 45%;
+            margin-top: 20px;
+            }
+            
+            .section-title {
+            font-weight: bold;
+            font-size: 12pt;
+            margin-bottom: 5px;
+            }
+            
+            .customer-name {
+            font-weight: bold;
+            font-size: 11pt;
+            }
+            
+            .clear {
+            clear: both;
+            }
+            
+            .details-section {
+            width: 100%;
+            margin: 20px 0;
+            }
+            
+            .details-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 5px;
+            }
+            
+            .detail-left, .detail-right {
+            display: table-cell;
+            vertical-align: top;
+            width: 50%;
+            }
+            
+            .detail-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 120px;
+            }
+            
+            .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 9pt;
+            }
+            
+            .items-table th, .items-table td {
+            border: 1px dotted #000;
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+            }
+            
+            .items-table th {
+            background-color: #e3e3e3;
+            font-weight: bold;
+            font-size: 9pt;
+            }
+            
+            .items-table td.location-cell {
+            text-align: left;
+            font-size: 8pt;
+            }
+            
+            .items-table td.product-cell {
+            text-align: left;
+            font-size: 8pt;
+            }
+            
+            .items-table td.description-cell {
+            text-align: left;
+            font-size: 8pt;
+            }
+            
+            .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            }
+            
+            .summary-table td {
+            padding: 5px;
+            border: 1px solid #000;
+            }
+            
+            .summary-table .label {
+            font-weight: bold;
+            width: 30%;
+            }
+            
+            .terms-section {
+            margin-top: 20px;
+            font-size: 9pt;
+            }
+            
+            .signature-area {
+            margin-top: 40px;
+            width: 100%;
+            }
+            
+            .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 30px;
+            width: 60%;
+            }
+            
+            .text-right {
+            text-align: right;
+            }
+            
+            .text-center {
+            text-align: center;
+            }
+            
+            .bold {
+            font-weight: bold;
+            }
+            
+            .page-break {
+            page-break-before: always;
+            }
+            
+            .header-table { width:100%; border-collapse:collapse; }
+            .header-table td { vertical-align:top; }
+            .header-table .left  { width:58%; padding-right:20pt; }
+            .header-table .right { width:42%; text-align: left; padding-left: 20pt;}
+            h3 { margin:0 0 6pt 0; }
+            .header-table tr.space-row td { padding-top:20pt; }
+            .header-table-margin {margin-left: 5px;}
+            
+            .totals-row {
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            }
+            
+            .customer-row {
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            }
+            
+            .totals-label {
+            font-weight: bold;
+            min-width: 180px;
+            display: inline-block;
+            }
+            
+            .totals-value {
+            text-align: right;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div class="header">
+            <div class="logo">
+                <img src="{!$Resource.FloorworldLogo}" alt="Floorworld LLC" width="240"/>  
+            </div>
+            <div class="order-title">
+                <h2>Proforma Invoice : {!proformaInvoice.Name}</h2>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>
+                <strong>Floorworld LLC</strong><br/>
+                Floorworld Building, Dubai Investment Park<br/>
+                DIP 2, Dubai Po Box 212349, United Arab Emirates
+            </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif; font-size:13px; table-layout:fixed;">
+            <tr>
+                <td style="width:50%; vertical-align:top;">
+                    <table style="width:100%; border-collapse:collapse; border:1px solid #ccc;">
+                        <tr>
+                            <td style="width:40%; background:#e6e6e6; padding:6px;">Sales Order date</td>
+                            <td style="padding:6px; background: #FDF7FA">{!TEXT(order.CreatedDate)}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Deal Name</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Opportunity.Name}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">LPO Ref #</td>
+                            <td style="padding:6px; background: #FDF7FA">12345</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Sales Person</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Sales_Rep__r.Name}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Account Name</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Account.Name}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Billing Address</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Account.BillingStreet}, {!order.Account.BillingCity}, {!order.Account.BillingState}, {!order.Account.BillingCountry} </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Account VAT #</td>
+                            <td style="padding:6px; background: #FDF7FA">104157987900003</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Account Ref #</td>
+                            <td style="padding:6px; background: #FDF7FA">ACCN146111</td>
+                        </tr>
+                    </table>
+                </td>
+                
+                <td style="width:50%; vertical-align:top;">
+                    <table style="width:100%; border-collapse:collapse; border:1px solid #ccc;">
+                        <tr>
+                            <td style="width:40%; background:#e6e6e6; padding:6px;">VAT Registration No.</td>
+                            <td style="padding:6px; background: #FDF7FA">100051766200003</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Branch</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Branch__r.Name}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Delivery Address</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Account.ShippingStreet}, {!order.Account.ShippingCity}, {!order.Account.ShippingState}, {!order.Account.ShippingCountry}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Contact Name</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Contact__r.Name}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Phone</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Contact__r.Phone}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Mobile</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Contact__r.MobilePhone}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Email</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Contact__r.Email}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Branch Address</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Branch__r.Branch_Address__c}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                        </tr>
+                        <tr>
+                            <td style="background:#e6e6e6; padding:6px;">Branch Phone</td>
+                            <td style="padding:6px; background: #FDF7FA">{!order.Branch__r.Branch_Phone__c}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <br/>
+        
+        <div class="clear"></div>
+        
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th width="4%">#</th>
+                    <th width="18%">Location</th>
+                    <th width="15%">Products</th>
+                    <th width="20%">Description</th>
+                    <!--th width="8%">Pallets</th-->
+                    <th width="8%">QTY<br/>(Main)</th>
+                    <!--th width="8%">QTY<br/>(Sub)</th-->
+                    <th width="9%">Unit Rate</th>
+                    <th width="10%">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:variable var="rowNumber" value="{!1}"/>
+                <apex:repeat value="{!orderProducts}" var="item">
+                    <tr>
+                        <td>{!rowNumber}</td>
+                        <td class="location-cell">{!item.Location__c}</td>
+                        <td class="product-cell">{!item.Product2.Name}</td>
+                        <td class="description-cell">{!item.Description}</td>
+                        <!--td><apex:outputText value="{0,number,#,##0.##}"><apex:param value="{!item.Pallets__c}"/></apex:outputText></td-->
+                        <td><apex:outputText value="{0,number,#,##0}"><apex:param value="{!item.Quantity}"/></apex:outputText></td>
+                        <!--td><apex:outputText value="{0,number,#,##0.####}"><apex:param value="{!item.Sub_Quantity__c}"/></apex:outputText> {!item.UnitOfMeasure}!></td-->
+                        <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
+                        <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.TotalPrice}"/></apex:outputText></td>
+                    </tr>
+                    <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
+                </apex:repeat>
+            </tbody>
+        </table>
+        
+        <table class="header-table" style="page-break-after: always;">
+            <tr>
+                <td class="left">
+                </td>
+                
+                <td class="right">
+                    <div class="totals-row">
+                        <span class="totals-label">Total</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Total_Price__c}"/></apex:outputText></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Tax %</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.VAT__c}"/></apex:outputText></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Tax Amount</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Tax_Amount__c}"/></apex:outputText></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Grand Total</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Grand_Total__c}"/></apex:outputText></span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <div style="margin-top: 20px;">
+            <div class="section-title">Tax Summary</div>
+            <table class="summary-table">
+                <tr>
+                    <th width="70%">Tax Details</th>
+                    <th width="15%">Taxable Amount</th>
+                </tr>
+                <tr>
+                    <td>VAT 5%</td>
+                    <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Total_Price__c * (5 / 100)}"/></apex:outputText></td>
+                    <!--td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Tax}"/></apex:outputText></td-->
+                </tr>
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td><strong>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Total_Price__c}"/></apex:outputText></strong></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <table class="summary-table">
+                <tr>
+                    <td class="label">Supply Type</td>
+                    <td>{!order.Supply_Type__c}</td>
+                </tr>
+                <tr>
+                    <td class="label">Goods Available</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="label">Shipping Method</td>
+                    <td>{!order.Shipping_Method__c}</td>
+                </tr>
+            </table>
+        </div>
+        
+    </body>
+</apex:page>
