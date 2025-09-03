@@ -14,7 +14,6 @@
                 </lightning-input>
             </div>
 
-            <!-- Table Structure -->
             <div class="table-container">
                 <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped">
                     <thead>
@@ -22,6 +21,7 @@
                             <th>Location</th>
                             <th>Item</th>
                             <th>Description</th>
+                            <th>Item Code</th>
                             <th>Net Area<br />(SQM/LM)</th>
                             <th>Wastage<br />(%)</th>
                             <th>Length<br />(M)</th>
@@ -35,7 +35,16 @@
                             <th>Amount</th>
                             <th>Tax Amount</th>
                             <th>Gross Amount</th>
+                            <th>Est. Landed Cost<br />(Main)</th>
                             <th>Est. Extended Cost</th>
+                            <th>Est. Gross Profit</th>
+                            <th>Est. Gross Profit<br />Percent (%)</th>
+                            <th>Intercompany<br />Profit Margin</th>
+                            <th>Intercompany<br />Price</th>
+                            <th>Transportation<br />Charges (%)</th>
+                            <th>Estimated Landed<br />Cost (Oman)</th>
+                            <th>Box's Per<br />Pallet</th>
+                            <th>Calculation<br />Basis</th>
                             <th>Cost Estimate Type</th>
                             <th>Estimate Type</th>
                         </tr>
@@ -49,7 +58,6 @@
                                             data-field="location" onchange={handleInputChange}></lightning-input>
                                     </td>
                                     <td>
-                                        <!-- Input field for lookup-like behavior -->
                                         <lightning-input class="wide-column" data-id={row.id} data-field="item"
                                             value={row.itemInput} onchange={handleSearchChange} onfocus={handleFocus}
                                             onblur={handleBlur} disabled={row.productNameDisabled}>
@@ -70,6 +78,11 @@
                                     <td>
                                         <lightning-input class="wide-column" data-id={row.id} value={row.description}
                                             data-field="description" onchange={handleInputChange} disabled="true">
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.itemCode}
+                                            data-field="itemCode" onchange={handleInputChange} disabled="true">
                                         </lightning-input>
                                     </td>
                                     <td>
@@ -100,13 +113,11 @@
                                         <lightning-input class="wide-column" data-id={row.id} value={row.quantity}
                                             data-field="quantity" onchange={handleInputChange} disabled=true>
                                         </lightning-input>
-                                        <!-- {row.quantityDisable} -->
                                     </td>
                                     <td>
                                         <lightning-input class="wide-column" data-id={row.id} value={row.quantitySqm}
                                             data-field="quantitySqm" onchange={handleInputChange} disabled=true>
                                         </lightning-input>
-                                        <!-- {row.quantityAreaDisable} -->
                                     </td>
                                     <td>
                                         <lightning-input class="wide-column" data-id={row.id} value={row.units}
@@ -139,9 +150,54 @@
                                         </lightning-input>
                                     </td>
                                     <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.estLandedCostMain}
+                                            data-field="estLandedCostMain" onchange={handleInputChange} disabled=true>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
                                         <lightning-input class="wide-column" data-id={row.id}
                                             value={row.estExtendedCost} data-field="estExtendedCost"
                                             onchange={handleInputChange} disabled=true>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.estGrossProfit}
+                                            data-field="estGrossProfit" onchange={handleInputChange} disabled=true>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.estGrossProfitPercent}
+                                            data-field="estGrossProfitPercent" onchange={handleInputChange} disabled=true>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.intercompanyProfitMargin}
+                                            data-field="intercompanyProfitMargin" onchange={handleInputChange} disabled=true>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.intercompanyPrice}
+                                            data-field="intercompanyPrice" onchange={handleInputChange} disabled=true>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.transportationChargesPercent}
+                                            data-field="transportationChargesPercent" onchange={handleInputChange} disabled=true>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.estimatedLandedCostOman}
+                                            data-field="estimatedLandedCostOman" onchange={handleInputChange} disabled=true>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.boxsPerPallet}
+                                            data-field="boxsPerPallet" onchange={handleInputChange} disabled=true>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input class="wide-column" data-id={row.id} value={row.calculationBasis}
+                                            data-field="calculationBasis" onchange={handleInputChange} disabled=true>
                                         </lightning-input>
                                     </td>
                                     <td>
@@ -169,6 +225,11 @@
                                     <td>
                                         <lightning-formatted-text value={row.description} class="wrap-text"
                                             title={row.description}>
+                                        </lightning-formatted-text>
+                                    </td>
+                                    <td>
+                                        <lightning-formatted-text value={row.itemCode} class="wrap-text"
+                                            title={row.itemCode}>
                                         </lightning-formatted-text>
                                     </td>
                                     <td>
@@ -241,10 +302,62 @@
                                         </lightning-formatted-number>
                                     </td>
                                     <td>
+                                        <lightning-formatted-number value={row.estLandedCostMain} class="wrap-text"
+                                            title={row.estLandedCostMain} minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4">
+                                        </lightning-formatted-number>
+                                    </td>
+                                    <td>
                                         <lightning-formatted-number value={row.estExtendedCost} class="wrap-text"
                                             title={row.estExtendedCost} minimum-fraction-digits="2"
                                             maximum-fraction-digits="2">
                                         </lightning-formatted-number>
+                                    </td>
+                                    <td>
+                                        <lightning-formatted-number value={row.estGrossProfit} class="wrap-text"
+                                            title={row.estGrossProfit} minimum-fraction-digits="2"
+                                            maximum-fraction-digits="2">
+                                        </lightning-formatted-number>
+                                    </td>
+                                    <td>
+                                        <lightning-formatted-number value={row.estGrossProfitPercent} class="wrap-text"
+                                            title={row.estGrossProfitPercent} minimum-fraction-digits="2"
+                                            maximum-fraction-digits="2">
+                                        </lightning-formatted-number>
+                                    </td>
+                                    <td>
+                                        <lightning-formatted-number value={row.intercompanyProfitMargin} class="wrap-text"
+                                            title={row.intercompanyProfitMargin} minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4">
+                                        </lightning-formatted-number>
+                                    </td>
+                                    <td>
+                                        <lightning-formatted-number value={row.intercompanyPrice} class="wrap-text"
+                                            title={row.intercompanyPrice} minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4">
+                                        </lightning-formatted-number>
+                                    </td>
+                                    <td>
+                                        <lightning-formatted-number value={row.transportationChargesPercent} class="wrap-text"
+                                            title={row.transportationChargesPercent} minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4">
+                                        </lightning-formatted-number>
+                                    </td>
+                                    <td>
+                                        <lightning-formatted-number value={row.estimatedLandedCostOman} class="wrap-text"
+                                            title={row.estimatedLandedCostOman} minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4">
+                                        </lightning-formatted-number>
+                                    </td>
+                                    <td>
+                                        <lightning-formatted-number value={row.boxsPerPallet} class="wrap-text"
+                                            title={row.boxsPerPallet}>
+                                        </lightning-formatted-number>
+                                    </td>
+                                    <td>
+                                        <lightning-formatted-text value={row.calculationBasis} class="wrap-text"
+                                            title={row.calculationBasis}>
+                                        </lightning-formatted-text>
                                     </td>
                                     <td>
                                         <lightning-formatted-text value={row.costEstimateType} class="wrap-text"
@@ -258,10 +371,9 @@
                                     </td>
                                 </template>
                             </tr>
-                            <!-- Conditionally Render Action Buttons for Selected Row -->
                             <template if:true={row.isSelected}>
                                 <tr key={row.id} class="action-buttons-row">
-                                    <td colspan="19" class="action-buttons-cell">
+                                    <td colspan="29" class="action-buttons-cell">
                                         <div class="action-buttons">
                                             <template if:true={row.editmode}>
                                                 <lightning-button label="Save" class="action-button add"
@@ -290,13 +402,11 @@
                 </table>
             </div>
 
-            <!-- Action Buttons -->
-            <!-- <center> -->
                 <div class="slds-align_absolute-center action-buttons" style="padding-top: 1%;">
                     <lightning-button label="Save Items" class="action-button add" onclick={handleSave}>
                     </lightning-button>
                 </div>
-            <!-- </center> -->
-        </div>
+
+            </div>
     </lightning-card>
 </template>

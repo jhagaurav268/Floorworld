@@ -114,6 +114,16 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             averageCost: '',
             costPricePerUnit: '',
             costPrice: '',
+            estLandedCostMain: '',
+            estGrossProfit: '',
+            estGrossProfitPercent: '',
+            intercompanyProfitMargin: '',
+            intercompanyPrice: '',
+            transportationChargesPercent: '',
+            estimatedLandedCostOman: '',
+            boxsPerPallet: '',
+            itemCode: '',
+            calculationBasis: '',
             isSuggestionsVisible: false,
             editmode: true,
             readmode: false,
@@ -159,6 +169,16 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             averageCost: this.safeToString(item.averageCost),
             costPricePerUnit: this.safeToString(item.costPricePerUnit),
             costPrice: this.safeToString(item.costPrice),
+            estLandedCostMain: this.safeToString(item.estLandedCostMain),
+            estGrossProfit: this.safeToString(item.estGrossProfit),
+            estGrossProfitPercent: this.safeToString(item.estGrossProfitPercent),
+            intercompanyProfitMargin: this.safeToString(item.intercompanyProfitMargin),
+            intercompanyPrice: this.safeToString(item.intercompanyPrice),
+            transportationChargesPercent: this.safeToString(item.transportationChargesPercent),
+            estimatedLandedCostOman: this.safeToString(item.estimatedLandedCostOman),
+            boxsPerPallet: this.safeToString(item.boxsPerPallet),
+            itemCode: item.itemCode || '',
+            calculationBasis: item.calculationBasis || '',
             isSuggestionsVisible: false,
             editmode: false,
             readmode: true,
@@ -361,7 +381,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     }
 
     scheduleDiscountRecalculation(field) {
-        const fieldsToRecalculate = ['amount', 'grossAmount', 'quantity', 'rate', 'unitPriceSub'];
+        const fieldsToRecalculate = ['amount', 'grossAmount', 'quantity', 'rate', 'unitPriceSub', 'estLandedCostMain'];
         if (fieldsToRecalculate.includes(field)) {
             setTimeout(() => {
                 this.recalculateOverallDiscount();
@@ -396,6 +416,7 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         this.calculateQuantities(row);
         this.calculatePricing(row);
         this.calculateCosts(row);
+        this.calculateEstCostAndIntercompanyPrice(row);
         this.formatNumbers(row);
     }
 
@@ -459,12 +480,6 @@ export default class FloorWorldCarpetSolution extends LightningElement {
     }
 
     calculateCosts(row) {
-        const averageCost = this.safeParseFloat(row.averageCost);
-        const quantity = this.safeParseFloat(row.quantity);
-        if (averageCost && quantity) {
-            row.estExtendedCost = (averageCost * quantity).toFixed(2);
-        }
-
         const costPricePerUnit = this.safeParseFloat(row.costPricePerUnit);
         if (costPricePerUnit) {
             if (row.widthM) {
@@ -480,8 +495,32 @@ export default class FloorWorldCarpetSolution extends LightningElement {
         }
     }
 
+    calculateEstCostAndIntercompanyPrice(row) {
+        const quantity = this.safeParseFloat(row.quantity);
+        const estLandedCostMain = this.safeParseFloat(row.estLandedCostMain);
+        const amount = this.safeParseFloat(row.amount);
+
+        if (quantity && estLandedCostMain) {
+            row.estExtendedCost = (quantity * estLandedCostMain).toFixed(2);
+        }
+
+        const estExtendedCost = this.safeParseFloat(row.estExtendedCost);
+        if (amount && estExtendedCost) {
+            row.estGrossProfit = (amount - estExtendedCost).toFixed(2);
+        }
+
+        const estGrossProfit = this.safeParseFloat(row.estGrossProfit);
+        if (estGrossProfit && amount && amount > 0) {
+            row.estGrossProfitPercent = ((estGrossProfit / amount) * 100).toFixed(2);
+        }
+    }
+
     formatNumbers(row) {
-        const fieldsToFormat = ['totalArea', 'rate', 'amount', 'taxAmount', 'grossAmount', 'estExtendedCost', 'quantitySqm'];
+        const fieldsToFormat = [
+            'totalArea', 'rate', 'amount', 'taxAmount', 'grossAmount', 'estExtendedCost', 'quantitySqm',
+            'estLandedCostMain', 'estGrossProfit', 'estGrossProfitPercent', 'intercompanyProfitMargin',
+            'intercompanyPrice', 'transportationChargesPercent', 'estimatedLandedCostOman'
+        ];
         fieldsToFormat.forEach(field => {
             if (row[field]) {
                 row[field] = this.safeParseFloat(row[field]).toFixed(2);
@@ -568,7 +607,15 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             unitPriceSub: product.UnitPrice || '',
             averageCost: productData.Average_Cost__c || 0,
             costPricePerUnit: product.Cost_Prize__c || '',
-            rate: product.UnitPrice || ''
+            rate: product.UnitPrice || '',
+            estLandedCostMain: productData.Est_Landed_Cost_Main__c || '',
+            intercompanyProfitMargin: productData.Intercompany_Profit_Margin__c || '',
+            intercompanyPrice: productData.Intercompany_Price__c || '',
+            transportationChargesPercent: productData.Transportation_Charges__c || '',
+            estimatedLandedCostOman: productData.Estimated_Landed_Cost_Oman__c || '',
+            boxsPerPallet: productData.Box_s_Per_Pallet__c || '',
+            itemCode: productData.ProductCode || '',
+            calculationBasis: productData.Calculation_Basis__c || ''
         });
 
         this.setFieldStatesForFamily(row);
@@ -934,7 +981,17 @@ export default class FloorWorldCarpetSolution extends LightningElement {
             isIndividualDiscount: INDIVIDUAL_DISCOUNT_PRODUCTS.includes(product.itemInput),
             discountAppliedFromRow: product.discountAppliedFromRow || null,
             individualDiscountRow: product.individualDiscountRow || null,
-            rowNumber: product.rowNumber
+            rowNumber: product.rowNumber,
+            estLandedCostMain: this.safeParseFloat(product.estLandedCostMain),
+            estGrossProfit: this.safeParseFloat(product.estGrossProfit),
+            estGrossProfitPercent: this.safeParseFloat(product.estGrossProfitPercent),
+            intercompanyProfitMargin: this.safeParseFloat(product.intercompanyProfitMargin),
+            intercompanyPrice: this.safeParseFloat(product.intercompanyPrice),
+            transportationChargesPercent: this.safeParseFloat(product.transportationChargesPercent),
+            estimatedLandedCostOman: this.safeParseFloat(product.estimatedLandedCostOman),
+            boxsPerPallet: this.safeParseFloat(product.boxsPerPallet),
+            itemCode: product.itemCode || '',
+            calculationBasis: product.calculationBasis || ''
         }));
     }
 
