@@ -6,7 +6,7 @@ import getExistingQuoteLineItems from '@salesforce/apex/QuoteController.getExist
 
 const PRODUCT_FAMILIES = {
     WALL_TO_WALL: ['Wall to Wall', 'F.SHEET-VINYL', 'F.ARTIFICIAL GRASS'],
-    DECKING: ['F. DECKING', 'Wood Flooring', 'F.LVT']
+    DECKING: ['F. DECKING', 'Wood Flooring', 'F.LVT', 'F.LVTCLICK', 'Accessories']
 };
 
 const TAX_RATE = 0.05;
