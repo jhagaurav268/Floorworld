@@ -1,0 +1,582 @@
+<apex:page applyBodyTag="false" showHeader="false" sidebar="false" standardStylesheets="false" renderAs="pdf" controller="SalesOrderPdfController">
+    <head>
+        <style>
+            @page {
+                size: A4 portrait;
+                margin: 30mm 10mm 25mm 10mm;
+                @bottom-left {
+                    content: element(footer);
+                }
+                @top-center {
+                    content: element(header);
+                }
+            }
+            
+            div.header {
+                position: running(header);
+                text-align: center;
+                padding-bottom: 5px;
+            }
+            
+            div.footer {
+                position: running(footer);
+            }
+            
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 9pt;
+                color: #000;
+                line-height: 1.2;
+            }
+            
+            .order-title {
+                float: right;
+                text-align: right;
+                width: 45%;
+            }
+            
+            .order-title h2 {
+                font-size: 16pt;
+                font-weight: bold;
+                margin: 0;
+            }
+            
+            .logo {
+                float: left;
+            }
+            
+            .order-number {
+                font-size: 14pt;
+                font-weight: bold;
+                margin: 5px 0;
+            }
+            
+            .order-date {
+                font-size: 10pt;
+                margin: 5px 0;
+            }
+            
+            .header-table {
+                width: 100%;
+                border-collapse: collapse;
+                background-color: white;
+                border: none;
+                font-size: 9pt;
+                margin: 20px 0;
+            }
+
+            .header-table td {
+                padding: 8px 12px;
+                vertical-align: top;
+                border: none;
+            }
+            
+            .left {
+                width: 50%;
+            }
+            
+            .right {
+                width: 50%;
+            }
+
+            .company-name {
+                font-size: 12pt;
+                font-weight: bold;
+                color: #000;
+                margin: 0 0 8px 0;
+            }
+
+            .company-info {
+                color: #000;
+                line-height: 1.4;
+                margin: 2px 0;
+                font-size: 9pt;
+            }
+
+            .bill-to-title {
+                font-size: 11pt;
+                font-weight: bold;
+                color: #000;
+                margin: 15px 0 8px 0;
+            }
+
+            .bill-to-info {
+                color: #000;
+                line-height: 1.4;
+                margin: 2px 0;
+                font-size: 9pt;
+            }
+                    
+            .customer-row {
+                margin: 6px 0;
+                color: #000;
+                font-size: 9pt;
+            }
+
+            .customer-label {
+                font-weight: bold;
+                color: #000;
+                display: inline-block;
+                width: 110px;
+                vertical-align: top;
+            }
+
+            .customer-value {
+                color: #000;
+                display: inline-block;
+                width: calc(100% - 120px);
+                vertical-align: top;
+                white-space: normal;       
+                word-wrap: break-word;     
+                line-height: 1.4;     
+            }
+
+            .trn-info {
+                margin-top: 12px;
+                color: #000;
+                font-size: 9pt;
+            }
+            
+            .space-row {
+                height: 15px;
+            }
+
+            .email-link {
+                color: #000;
+                text-decoration: underline;
+            }
+            
+            .items-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                font-size: 9pt;
+            }
+            
+            .items-table th,
+            .items-table td {
+                padding: 6px 4px;
+                text-align: center;
+                vertical-align: middle;
+            }
+            
+            .items-table th {
+                background-color: #e3e3e3;
+                font-weight: bold;
+                font-size: 9pt;
+            }
+            
+            .items-table td.left-align {
+                text-align: left;
+                font-size: 8pt;
+            }
+                        
+            .clear {
+                clear: both;
+            }
+            
+            .order-container { 
+                padding: 10px; 
+            }
+            
+            .mytable {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+                font-size: 9pt;
+            }
+            
+            .mytable td {
+                padding: 6px 8px;
+                vertical-align: top;
+            }
+
+            .net-total td,
+            .balance td {
+                background: #e3e3e3;
+                font-weight: bold;
+            }
+            
+            .bank-details {
+                margin: 20px 0;
+                font-size: 10pt;
+                line-height: 1.4;
+            }
+            
+            .bank-details p {
+                margin: 3px 0;
+            }
+            
+            .section-title {
+                font-weight: bold;
+                font-size: 12pt;
+                padding-top: 20px;
+            }
+            
+            .tax-summary-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 10px 0;
+                font-size: 10pt;
+            }
+            
+            .tax-summary-table th,
+            .tax-summary-table td {
+                padding: 8px;
+            }
+            
+            .tax-summary-table th {
+                background-color: #e3e3e3;
+                font-weight: bold;
+            }
+            
+            .order-details-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                font-size: 10pt;
+            }
+            
+            .order-details-table td {
+                padding: 8px;
+            }
+            
+            .order-details-table .label {
+                font-weight: bold;
+                width: 30%;
+            }
+            
+            .other-instruction {
+                border: 2px dotted #000;
+                padding: 15px;
+                margin: 20px 0;
+            }
+            
+            .instruction-title {
+                text-align: center;
+                margin-bottom: 15px;
+            }
+            
+            .instruction-title .english-text {
+                font-size: 14pt;
+                font-weight: bold;
+            }
+            
+            .instruction-content {
+                font-size: 10pt;
+                line-height: 1.4;
+                text-align: justify;
+            }
+            
+            .terms-section {
+                margin-top: 20px;
+                font-size: 9pt;
+                border-collapse: collapse;
+                width: 100%;
+            }
+            
+            .terms-section th {
+                background: #f2f2f2;
+                text-align: center;
+                padding: 8px;
+                border: 1px solid #000;
+                font-weight: bold;
+            }
+            
+            .terms-section td {
+                padding: 6px;
+                border: 1px solid #000;
+                vertical-align: top;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div class="header">
+            <div class="logo">
+                <img src="{!$Resource.FloorworldLogo}" alt="Floorworld LLC" width="240"/>  
+            </div>
+            <div class="order-title">
+                <h2>Sales Order</h2>
+                <div class="order-number">#{!order.orderNumber}</div>
+                <div class="order-date">Date: <apex:outputText value="{0,date,M/d/yyyy}"><apex:param value="{!order.CreatedDate}"/></apex:outputText></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+        
+        <div class="footer">
+            <div>
+                <strong>Floorworld LLC</strong><br/>
+                Floorworld Building<br/>
+                Dubai Investment Park<br/>
+                DIP 2, Dubai Po Box 212349<br/>
+                United Arab Emirates
+            </div>
+            <!-- <div style="text-align: right; margin-top: -60px;">
+                <div>1 of 5</div>
+            </div> -->
+        </div>
+        
+        <table class="header-table">
+            <tr>
+                <td class="left">
+                    <div class="company-name">Floorworld LLC</div>
+                    <div class="company-info">DXB-Arabian Center</div>
+                    <div class="company-info">Shop No. 2020 1st Floor, Arabian Center, Dubai</div>
+                    <div class="company-info">04 337 6865</div>
+                    <div class="trn-info">TRN: 100056993700003</div>
+                </td>
+                <td class="right">
+                    <div class="customer-row">
+                        <div class="customer-label">Sales Person</div>
+                        <div class="customer-value">{!order.Owner.Name}</div>
+                    </div>
+                    <div class="customer-row">
+                        <div class="customer-label">Deal/Project Name</div>
+                        <div class="customer-value">{!order.Opportunity.Name}</div>
+                    </div>
+                </td>
+            </tr>
+            <tr class="space-row">
+                <td colspan="2"></td>
+            </tr>
+            <tr>
+                <td class="left">
+                    <div class="bill-to-title">Bill To</div>
+                    <div class="bill-to-info">{!order.Account.Name}</div>
+                    <div class="bill-to-info">{!order.Account.BillingStreet}</div>
+                    <div class="bill-to-info">{!order.Account.BillingCity} {!order.Account.BillingState}</div>
+                    <div class="bill-to-info">{!order.Account.BillingCountry}</div>
+                    <div class="trn-info">TRN: 100056993700003</div>
+                </td>
+                <td class="right">
+                    <div class="customer-row">
+                        <div class="customer-label">Customer</div>
+                        <div class="customer-value">{!order.Account.AccountNumber} {!order.Account.Name}</div>
+                    </div>
+                    <div class="customer-row">
+                        <div class="customer-label">Contact Name</div>
+                        <div class="customer-value">{!order.Account.Name}</div>
+                    </div>
+                    <div class="customer-row">
+                        <div class="customer-label">Phone No.</div>
+                        <div class="customer-value">{!order.Account.Phone}</div>
+                    </div>
+                    <div class="customer-row"> 
+                        <div class="customer-label">Mobile No.</div>
+                        <div class="customer-value">{!order.Account.Phone}</div>
+                    </div>
+                    <div class="customer-row">
+                        <div class="customer-label">Email</div>
+                        <div class="customer-value">
+                            <span class="email-link">{!order.Quote.Email}</span>
+                        </div>
+                    </div>
+                    <div class="customer-row">
+                        <div class="customer-label">Delivery Address</div>
+                        <div class="customer-value">
+                            {!order.Account.ShippingStreet}<br/>
+                            {!order.Account.ShippingCity} {!order.Account.ShippingState}<br/>
+                            {!order.Account.ShippingCountry}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th width="3%">#</th>
+                    <th width="10%">Location</th>
+                    <th width="12%">Products</th>
+                    <th width="25%">Description</th>
+                    <th width="6%">Pallets</th>
+                    <th width="8%">QTY<br/>(Main)</th>
+                    <th width="8%">QTY<br/>(Sub)</th>
+                    <th width="12%">Unit Rate<br/>(Sub Unit)</th>
+                    <th width="12%">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:variable var="rowNumber" value="{!1}"/>
+                <apex:repeat value="{!orderProducts}" var="item">
+                    <tr>
+                        <td>{!rowNumber}</td>
+                        <td class="left-align">{!item.Location__c}</td>
+                        <td class="left-align">{!item.Product2.ProductCode}</td>
+                        <td class="left-align">{!item.Product2.Name}<br/>{!item.Description}</td>
+                        <td>{!IF(ISBLANK(item.Product2.Box_s_Per_Pallet__c), '', TEXT(item.Product2.Box_s_Per_Pallet__c))}</td>
+                        <td><apex:outputText value="{0,number,#,##0}"><apex:param value="{!item.Quantity}"/></apex:outputText></td>
+                        <td><apex:outputText value="{0,number,#,##0.###}"><apex:param value="{!item.Quantity_SQM__c}"/></apex:outputText> SqM</td>
+                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
+                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.TotalPrice}"/></apex:outputText></td>
+                    </tr>
+                    <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
+                </apex:repeat>
+            </tbody>
+        </table>
+        <div style="border-bottom: 2px solid #e0e0e0; margin: 20px 0;"></div>
+        <div class="clear"></div>
+
+        <div class="order-container">
+            <table style="width:100%; border-collapse:collapse;">
+                <tr>
+                    <td style="width:45%; vertical-align:top; padding-left:10px;">
+                        <!-- Left side content can go here -->
+                    </td>
+                    <td style="width:55%; vertical-align:top; padding-right:10px;">
+                        <table class="mytable">
+                            <tr class="grand-total">
+                                <td><strong>Total</strong></td>
+                                <td>{!order.CurrencyIsoCode} {!order.Total_Price__c}</td>
+                            </tr>
+                            <tr style="{!IF(AND(NOT(ISNULL(order.Discounted_Amount__c)), order.Discounted_Amount__c > 0), '', 'display:none;')}">
+                                <td class="label"><strong>Discount Amount</strong></td>
+                                <td class="value">{!order.CurrencyIsoCode} {!order.Discounted_Amount__c}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Taxable Amount</strong></td>
+                                <td>{!order.CurrencyIsoCode} {!order.Total_Price__c}</td>
+                            </tr>
+                            <tr>
+                                <td class="label"><strong>Tax %</strong></td>
+                                <td class="value">{!order.VAT__c}%</td>
+                            </tr>
+                            <tr>
+                                <td class="label"><strong>Tax Amount</strong></td>
+                                <td class="value">{!order.CurrencyIsoCode} {!order.Tax_Amount__c}</td>
+                            </tr>
+                            <tr class="net-total">
+                                <td><strong>Grand Total</strong></td>
+                                <td>{!order.CurrencyIsoCode} {!order.Grand_Total__c}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                            </tr>
+                            <tr class="balance">
+                                <td><strong>Balance</strong></td>
+                                <td>{!order.CurrencyIsoCode} {!order.Balance_Due__c}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="clear"></div>
+        
+        <div style="page-break-before: always;">
+            <div class="bank-details">
+                <p><strong>Account Name:</strong> FLOORWORLD LLC</p>
+                <p><strong>Bank:</strong> Emirates NBD</p>
+                <p><strong>Account No.:</strong> 1014436622301</p>
+                <p><strong>IBAN No.:</strong> AE960260001014436622301</p>
+                <p><strong>Branch Name:</strong> Emirates Mall Branch</p>
+                <p><strong>Swift Code:</strong> EBILAEAD</p>
+            </div>
+            
+            <div class="section-title">Tax Summary</div>
+            <table class="tax-summary-table">
+                <thead>
+                    <tr>
+                        <th width="50%">Tax Details</th>
+                        <th width="25%">Taxable Amount</th>
+                        <th width="25%">Tax</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Vat {!order.VAT__c}%</td>
+                        <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Total_Price__c}"/></apex:outputText></td>
+                        <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Tax_Amount__c}"/></apex:outputText></td>
+                    </tr>
+                    <tr style="font-weight: bold;">
+                        <td>Total</td>
+                        <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Tax_Amount__c}"/></apex:outputText></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="border-bottom: 2px solid #e0e0e0; margin: 20px 0;"></div>
+            
+            <table class="order-details-table">
+                <tr>
+                    <td class="label">Supply Type</td>
+                    <td>{!order.Supply_Type__c}</td>
+                </tr>
+                <tr>
+                    <td class="label">Good Available</td>
+                    <td>{!order.Good_Available__c}</td>
+                </tr>
+                <tr>
+                    <td class="label">Shipping Method</td>
+                    <td>{!order.Shipping_Method__c}</td>
+                </tr>
+                <tr>
+                    <td class="label">Payment Terms</td>
+                    <td>{!order.Payment_Terms__c}</td>
+                </tr>
+            </table>
+
+            <div style="border-bottom: 2px solid #e0e0e0; margin: 20px 0;"></div>
+            
+            <div class="other-instruction">
+                <div class="instruction-title">
+                    <div class="english-text">Other Instruction</div>
+                </div>
+                <div class="instruction-content">
+                    
+                </div>
+            </div>
+            
+            <div>
+                <table class="terms-section">
+                    <tr>
+                        <th width="5%"></th>
+                        <td>
+                            <strong>Sales Terms and Conditions</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th width="5%">1</th>
+                        <td>
+                            <strong>Cancellations</strong> - We will consider, but not be bound to accept, any request for cancellation of an order, and acceptance shall be on such terms as may be agreed by us in writing. We reserve the right to levy an administration charge (minimum 25%) together with any manufacturing costs incurred whilst processing an order. No requests for cancellation will be considered for all Engineers' wood flooring, wood accessories or where it is a custom design, has been specially purchased locally or internationally as a non-stock item. No requests for cancellation will be considered more than 1 month after Sales Order confirmation date.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>2</th>
+                        <td>
+                            <strong>Returns</strong> - We do not normally accept the return of perfect goods if correctly supplied as ordered. We therefore strongly recommend that customers check quantity, colour and product requirements carefully before ordering. If goods are accepted for return at the company's discretion, we reserve the right to levy an administration charge (minimum 25%) together with carriage.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>3</th>
+                        <td>
+                            <strong>Storage and Delivery</strong> - Delivery as mentioned in the shipment method will only commence when received cash or cleared funds in our bank account. This will exclude Saturdays and Sundays and placed the next working day that follows.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>3.A</th>
+                        <td>
+                            We reserve the right to charge a storage fee of 500 Dhs/month for goods held in our warehouse for a period over one (1) month. This will commence on or after 30 days from date of Sales Order confirmation or 30days from the no. of days/weeks given in the shipment method.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>4</th>
+                        <td>
+                            <strong>Collections</strong> - Arrangements can be made for collection from our premises by advance notice and agreement. Usually Monday to Friday (8 a.m. to 5 p.m.) excluding public holidays. We kindly request customers, however, to make such arrangements well in advance of intended collection of goods required. We regret that we cannot accept any claims whatsoever in such cases, if goods are unavailable at the time of collection. All promises of stock availability are given in good faith, but should not be regarded as guaranteed correct.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>5</th>
+                        <td>
+                            <strong>Settlement</strong> - Cleared funds are required from non-credit account customers before goods can be released from our warehouse. Prepayment may be made by cleared cheque from a recognized U.A.E bank, cash, credit card or direct bank transfer. Note: This must be a minimum of 3 days prior to the agreed delivery date or on collection from our warehouse.
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </body>
+</apex:page>
