@@ -193,7 +193,11 @@
                             <tr class="grand-total"><td>Grand Total (AED)</td><td>{!order.Total_Price__c}</td></tr>
                             <tr><td class="label">VAT %</td><td class="value">{!order.VAT__c}</td></tr>
                             <tr><td class="label">VAT Amount (AED)</td><td class="value">{!order.Tax_Amount__c}</td></tr>
-                            <tr><td class="label">Discount Amount (AED)</td><td class="value">{!order.Discounted_Amount__c}</td></tr>
+                            <tr style="{!IF(AND(NOT(ISNULL(order.Discounted_Amount__c)), order.Discounted_Amount__c > 0), '', 'display:none;')}">
+                                <td class="label">Discount Amount (AED)</td>
+                                <td class="value">{!order.Discounted_Amount__c}</td>
+                            </tr>
+
                             <tr><td class="label">Adjustment (-)</td><td class="value">0.0000</td></tr>
                             <tr class="net-total"><td>Net Total (AED)</td><td>{!order.Grand_Total__c}</td></tr>
                             <tr><td class="label">Proforma Invoice (%)</td><td class="value">{!proformaInvoice.Proforma_Invoice__c}</td></tr>
