@@ -15,6 +15,7 @@
             div.header {
             position: running(header);
             text-align: center;
+            margin-top: 48px;
             }
             
             div.footer {
@@ -222,6 +223,12 @@
                 justify-content: space-between;
             }
             
+            .customer-row {
+                margin-bottom: 5px;
+                display: flex;
+                justify-content: space-between;
+            }
+            
             .totals-label {
                 font-weight: bold;
                 min-width: 180px;
@@ -237,7 +244,7 @@
     <body>
         <div class="header">
             <div class="logo">
-                <img src="{!$Resource.FloorworldLogo}" alt="Floorworld LLC" width="250"/>  
+                <img src="{!$Resource.FloorworldLogo}" alt="Floorworld LLC" width="240"/>  
             </div>
             <div class="quote-title">
                 <h2>Quotation</h2>
@@ -264,8 +271,8 @@
                 </td>
                 
                 <td class="right">
-                    <div><b>Sales Person:</b><span class="header-table-margin">{!quote.Owner.Name}</span></div>
-                    <div><b>Deal/Project Name:</b><span class="header-table-margin">{!quote.Name}</span></div>
+                    <div class="customer-row"><b>Sales Person:</b><span class="header-table-margin">{!quote.Owner.Name}</span></div>
+                    <div class="customer-row"><b>Deal/Project Name:</b><span class="header-table-margin">{!quote.Opportunity.Name}</span></div>
                 </td>
             </tr>
             <tr class="space-row">
@@ -274,17 +281,18 @@
                     <div>{!quote.Account.Name}</div>
                     <div>{!quote.Account.BillingStreet}</div>
                     <div>{!quote.Account.BillingCity} {!quote.Account.BillingState}</div>
-                    <div>{!quote.Account.BillingCountry}</div>
+                    <div>{!quote.Account.BillingCountry}</div>	
+                    <br/>
                     <div>TRN: </div>
                 </td>
                 
                 <td class="right">
-                    <div><b>Customer:</b><span class="header-table-margin">{!quote.Account.AccountNumber} {!quote.Account.Name}</span></div>
-                    <div><b>Contact Name:</b><span class="header-table-margin">{!quote.Account.Name}</span></div>
-                    <div><b>Phone No.:</b><span class="header-table-margin">{!quote.Account.Phone}</span></div>
-                    <div><b>Mobile No.:</b><span class="header-table-margin">{!quote.Account.Phone}</span></div>
-                    <div><b>Email:</b><span class="header-table-margin">{!quote.Email}</span></div>
-                    <div><b>Delivery Address:</b><span class="header-table-margin">{!quote.Account.ShippingStreet}, {!quote.Account.ShippingCity}, {!quote.Account.ShippingState},
+                    <div class="customer-row"><b>Customer:</b><span class="header-table-margin">{!quote.Account.AccountNumber} {!quote.Account.Name}</span></div>
+                    <div class="customer-row"><b>Contact Name:</b><span class="header-table-margin">{!quote.Account.Name}</span></div>
+                    <div class="customer-row"><b>Phone No.:</b><span class="header-table-margin">{!quote.Account.Phone}</span></div>
+                    <div class="customer-row"><b>Mobile No.:</b><span class="header-table-margin">{!quote.Account.Phone}</span></div>
+                    <div class="customer-row"><b>Email:</b><span class="header-table-margin">{!quote.Email}</span></div>
+                    <div class="customer-row"><b>Delivery Address:</b><span class="header-table-margin">{!quote.Account.ShippingStreet}, {!quote.Account.ShippingCity}, {!quote.Account.ShippingState},
                         {!quote.Account.ShippingCountry}</span></div>
                 </td>
             </tr>
@@ -301,9 +309,9 @@
                     <th width="18%">Location</th>
                     <th width="15%">Products</th>
                     <th width="20%">Description</th>
-                    <th width="8%">Pallets</th>
+                    <!--th width="8%">Pallets</th-->
                     <th width="8%">QTY<br/>(Main)</th>
-                    <th width="8%">QTY<br/>(Sub)</th>
+                    <!--th width="8%">QTY<br/>(Sub)</th-->
                     <th width="9%">Unit Rate</th>
                     <th width="10%">Amount</th>
                 </tr>
@@ -314,20 +322,20 @@
                     <tr>
                         <td>{!rowNumber}</td>
                         <td class="location-cell">{!item.Location__c}</td>
-                        <td class="product-cell">{!item.Product2.ProductCode} {!item.Product2.Name}</td>
+                        <td class="product-cell">{!item.Product2.Name}</td>
                         <td class="description-cell">{!item.Description}</td>
-                        <td><!--apex:outputText value="{0,number,#,##0.##}"><apex:param value="{!item.Pallets__c}"/></apex:outputText--></td>
+                        <!--td><apex:outputText value="{0,number,#,##0.##}"><apex:param value="{!item.Pallets__c}"/></apex:outputText></td-->
                         <td><apex:outputText value="{0,number,#,##0}"><apex:param value="{!item.Quantity}"/></apex:outputText></td>
-                        <td><!--apex:outputText value="{0,number,#,##0.####}"><apex:param value="{!item.Sub_Quantity__c}"/></apex:outputText> {!item.UnitOfMeasure}!--></td>
+                        <!--td><apex:outputText value="{0,number,#,##0.####}"><apex:param value="{!item.Sub_Quantity__c}"/></apex:outputText> {!item.UnitOfMeasure}!></td-->
                         <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
-                        <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.TotalPrice}"/></apex:outputText></td>
+                        <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.Gross_Amount__c}"/></apex:outputText></td>
                     </tr>
                     <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
                 </apex:repeat>
             </tbody>
         </table>
         
-        <table class="header-table">
+        <table class="header-table" style="page-break-after: always;">
             <tr>
                 <td class="left">
                 </td>
@@ -335,27 +343,27 @@
                 <td class="right">
                     <div class="totals-row">
                         <span class="totals-label">Total</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Subtotal}"/></apex:outputText></span>
-                    </div>
-                    <div class="totals-row">
-                        <span class="totals-label">Discount Amount</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Discount}"/></apex:outputText></span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Total_Price__c}"/></apex:outputText></span>
                     </div>
                     <div class="totals-row">
                         <span class="totals-label">Total Taxable Amount</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Subtotal - quote.Discount}"/></apex:outputText></span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Total_Price__c}"/></apex:outputText></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Discount Amount</span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Discounted_Amount__c}"/></apex:outputText></span>
                     </div>
                     <div class="totals-row">
                         <span class="totals-label">Tax %</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Discount}"/></apex:outputText></span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.VAT__c}"/></apex:outputText></span>
                     </div>
                     <div class="totals-row">
                         <span class="totals-label">Tax Amount</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Discount}"/></apex:outputText></span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Tax_Amount__c}"/></apex:outputText></span>
                     </div>
                     <div class="totals-row">
                         <span class="totals-label">Grand Total</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.TotalPrice}"/></apex:outputText></span>
+                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Grand_Total__c}"/></apex:outputText></span>
                     </div>
                 </td>
             </tr>
@@ -376,7 +384,6 @@
                 </tr>
                 <tr>
                     <td><strong>Total</strong></td>
-                    <td></td>
                     <td><strong>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.TotalPrice}"/></apex:outputText></strong></td>
                 </tr>
             </table>
@@ -415,35 +422,6 @@
                 <li>Any additional material or works required will be charged separately.</li>
                 <li>No Skirting in the staircase. Existing marble skirting will not be removed.</li>
             </ol>
-        </div>
-        
-        <div class="signature-area">
-            <p>I, ______ hereby agree to the products, specifications, quantity, price and general terms stated above and inclusive of the points listed in "Other Instructions"</p>
-            
-            <div style="margin-top: 40px;">
-                <div class="signature-line"></div>
-                <div>Name</div>
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <div class="signature-line"></div>
-                <div>Signature</div>
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <div class="signature-line"></div>
-                <div>Title</div>
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <div class="signature-line"></div>
-                <div>Designation</div>
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <div class="signature-line" style="width: 40%;"></div>
-                <div>Stamp</div>
-            </div>
         </div>
         
         <div class="page-break">
@@ -488,29 +466,6 @@
                 
                 <p><strong>9. Title To Goods</strong> - We reserve the right to retain, if we should so decide, the title to goods supplied under these terms of sale until the purchaser has discharged all sums owing to us. Until such discharge, the purchaser shall hold the goods, whether or not sold to another party upon trust for ourselves and grant us the right, if we so wish, to enter the purchaser's or its agent's premises to recover any such goods. Please note: If you experience any difficulties with, or are unsure of any of the points contained within the Terms and Conditions, please do not hesitate to contact Floorworld LLC by telephone on 04 889 5661 email to sales@floorworld.com</p>
                 
-                <div class="signature-area">
-                    <p>I, _________________________, hereby agree to FLOORWORLD Terms and Conditions listed above.</p>
-                    
-                    <div style="margin-top: 20px;">
-                        <div class="signature-line"></div>
-                        <div>Name</div>
-                    </div>
-                    
-                    <div style="margin-top: 20px;">
-                        <div class="signature-line"></div>
-                        <div>Signature</div>
-                    </div>
-                    
-                    <div style="margin-top: 20px;">
-                        <div class="signature-line"></div>
-                        <div>Title/Designation</div>
-                    </div>
-                    
-                    <div style="margin-top: 20px;">
-                        <div class="signature-line" style="width: 40%;"></div>
-                        <div>Stamp</div>
-                    </div>
-                </div>
             </div>
         </div>
     </body>
