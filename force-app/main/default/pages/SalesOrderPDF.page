@@ -394,7 +394,7 @@
                     <div>{!order.Account.BillingCity} {!order.Account.BillingState}</div>
                     <div>{!order.Account.BillingCountry}</div>
                     <br/>
-                    <div>TRN: </div>
+                    <div>TRN: 100051766200003</div>
                 </td>
                 
                 <td class="right">
