@@ -23,10 +23,10 @@
             }
             
             body {
-                font-family: Arial, Helvetica, sans-serif;
-                font-size: 9pt;
-                color: #000;
-                line-height: 1.2;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #000;
+            line-height: 1.2;
             }
             
             .order-title {
@@ -56,28 +56,14 @@
                 margin: 5px 0;
             }
             
-            .header-table {
-                width: 100%;
-                border-collapse: collapse;
-                background-color: white;
-                border: none;
-                font-size: 9pt;
-                margin: 20px 0;
-            }
+            .header-table { width:100%; border-collapse:collapse; }
+            .header-table td { vertical-align:top; }
+            .header-table .left  { width:58%; padding-right:20pt; }
+            .header-table .right { width:42%; text-align: left; padding-left: 20pt;}
+            h3 { margin:0 0 6pt 0; }
+            .header-table tr.space-row td { padding-top:20pt; }
+            .header-table-margin {margin-left: 5px;}
 
-            .header-table td {
-                padding: 8px 12px;
-                vertical-align: top;
-                border: none;
-            }
-            
-            .left {
-                width: 50%;
-            }
-            
-            .right {
-                width: 50%;
-            }
 
             .company-name {
                 font-size: 12pt;
@@ -108,9 +94,9 @@
             }
                     
             .customer-row {
-                margin: 6px 0;
-                color: #000;
-                font-size: 9pt;
+                margin-bottom: 5px;
+                display: flex;
+                justify-content: space-between;
             }
 
             .customer-label {
@@ -317,7 +303,7 @@
             </div> -->
         </div>
         
-        <table class="header-table">
+        <!-- <table class="header-table">
             <tr>
                 <td class="left">
                     <div class="company-name">Floorworld LLC</div>
@@ -380,6 +366,45 @@
                             {!order.Account.ShippingCountry}
                         </div>
                     </div>
+                </td>
+            </tr>
+        </table> -->
+
+        <table class="header-table">
+            <tr>
+                <td class="left">
+                    <h3>Floorworld LLC</h3>
+                    <div>DXB-Head Office</div>
+                    <div>DIP 2 Plot 597-733, Dubai Investment Park 2, Dubai</div>
+                    <div>04 889 5661</div>
+                    <br/>
+                    <div>TRN: 100051766200003</div>
+                </td>
+                
+                <td class="right">
+                    <div class="customer-row"><b>Sales Person:</b><span class="header-table-margin">{!order.Sales_Rep__r.Name}</span></div>
+                    <div class="customer-row"><b>Deal/Project Name:</b><span class="header-table-margin">{!order.Opportunity.Name}</span></div>
+                </td>
+            </tr>
+            <tr class="space-row">
+                <td class="left">
+                    <h3>Bill To</h3>
+                    <div>{!order.Account.Name}</div>
+                    <div>{!order.Account.BillingStreet}</div>
+                    <div>{!order.Account.BillingCity} {!order.Account.BillingState}</div>
+                    <div>{!order.Account.BillingCountry}</div>
+                    <br/>
+                    <div>TRN: </div>
+                </td>
+                
+                <td class="right">
+                    <div class="customer-row"><b>Customer:</b><span class="header-table-margin">{!order.Account.AccountNumber} {!order.Account.Name}</span></div>
+                    <div class="customer-row"><b>Contact Name:</b><span class="header-table-margin">{!order.Account.Name}</span></div>
+                    <div class="customer-row"><b>Phone No.:</b><span class="header-table-margin">{!order.Account.Phone}</span></div>
+                    <div class="customer-row"><b>Mobile No.:</b><span class="header-table-margin">{!order.Account.Phone}</span></div>
+                    <div class="customer-row"><b>Email:</b><span class="header-table-margin">{!order.Quote.Email}</span></div>
+                    <div class="customer-row"><b>Delivery Address:</b><span class="header-table-margin">{!order.Account.ShippingStreet}, {!order.Account.ShippingCity}, {!order.Account.ShippingState},
+                        {!order.Account.ShippingCountry}</span></div>
                 </td>
             </tr>
         </table>
