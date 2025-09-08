@@ -89,9 +89,26 @@
             }
             
             .section-title {
-            font-weight: bold;
-            font-size: 12pt;
-            margin-bottom: 5px;
+                font-weight: bold;
+                font-size: 12pt;
+                padding-top: 20px;
+            }
+
+            .tax-summary-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 10px 0;
+                font-size: 10pt;
+            }
+            
+            .tax-summary-table th,
+            .tax-summary-table td {
+                padding: 8px;
+            }
+            
+            .tax-summary-table th {
+                background-color: #e3e3e3;
+                font-weight: bold;
             }
             
             .customer-name {
@@ -134,7 +151,7 @@
             }
             
             .items-table th, .items-table td {
-            border: 1px dotted #000;
+            /* border: 1px dotted #000; */
             padding: 6px 4px;
             text-align: center;
             vertical-align: middle;
@@ -238,6 +255,96 @@
             .totals-value {
                 text-align: right;
             }
+
+            .quote-container { 
+                padding: 10px; 
+            }
+            
+            .mytable {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+                font-size: 9pt;
+            }
+            
+            .mytable td {
+                padding: 6px 8px;
+                vertical-align: top;
+            }
+
+            .net-total td{
+                background: #e3e3e3;
+                font-weight: bold;
+            }
+            
+            .bank-details {
+                margin: 20px 0;
+                font-size: 10pt;
+                line-height: 1.4;
+            }
+            
+            .bank-details p {
+                margin: 3px 0;
+            }
+
+            .quote-details-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                font-size: 10pt;
+            }
+            
+            .quote-details-table td {
+                padding: 8px;
+            }
+            
+            .quote-details-table .label {
+                font-weight: bold;
+                width: 30%;
+            }
+            
+            .other-instruction {
+                border: 2px dotted #000;
+                padding: 15px;
+                margin: 20px 0;
+            }
+
+            .instruction-title {
+                text-align: center;
+                margin-bottom: 15px;
+            }
+            
+            .instruction-title .english-text {
+                font-size: 14pt;
+                font-weight: bold;
+            }
+            
+            .instruction-content {
+                font-size: 10pt;
+                line-height: 1.4;
+                text-align: justify;
+            }
+
+            .terms-section {
+                margin-top: 20px;
+                font-size: 9pt;
+                border-collapse: collapse;
+                width: 100%;
+            }
+            
+            .terms-section th {
+                background: #f2f2f2;
+                text-align: center;
+                padding: 8px;
+                border: 1px solid #000;
+                font-weight: bold;
+            }
+            
+            .terms-section td {
+                padding: 6px;
+                border: 1px solid #000;
+                vertical-align: top;
+            }
         </style>
     </head>
     
@@ -267,6 +374,7 @@
                     <div>DXB-Head Office</div>
                     <div>DIP 2 Plot 597-733, Dubai Investment Park 2, Dubai</div>
                     <div>04 889 5661</div>
+                    <br/>
                     <div>TRN: 100051766200003</div>
                 </td>
                 
@@ -283,7 +391,7 @@
                     <div>{!quote.Account.BillingCity} {!quote.Account.BillingState}</div>
                     <div>{!quote.Account.BillingCountry}</div>	
                     <br/>
-                    <div>TRN: </div>
+                    <div>TRN: 100051766200003</div>
                 </td>
                 
                 <td class="right">
@@ -297,24 +405,19 @@
                 </td>
             </tr>
         </table>
-        
-        <br/><br/>
-        
-        <div class="clear"></div>
-        
+                        
         <table class="items-table">
             <thead>
                 <tr>
-                    <th width="4%">#</th>
-                    <th width="18%">Location</th>
-                    <th width="15%">Products</th>
-                    <th width="20%">Description</th>
-                    <!--th width="8%">Pallets</th-->
+                    <th width="3%">#</th>
+                    <th width="10%">Location</th>
+                    <th width="12%">Products</th>
+                    <th width="25%">Description</th>
+                    <th width="6%">Pallets</th>
                     <th width="8%">QTY<br/>(Main)</th>
-                    <!--th width="8%">QTY<br/>(Sub)</th-->
-                    <th width="9%">Unit Rate</th>
-                    <th width="10%">Amount</th>
-                </tr>
+                    <th width="8%">QTY<br/>(Sub)</th>
+                    <th width="12%">Unit Rate<br/>(Sub Unit)</th>
+                    <th width="12%">Amount</th>                </tr>
             </thead>
             <tbody>
                 <apex:variable var="rowNumber" value="{!1}"/>
@@ -324,80 +427,106 @@
                         <td class="location-cell">{!item.Location__c}</td>
                         <td class="product-cell">{!item.Product2.Name}</td>
                         <td class="description-cell">{!item.Description}</td>
-                        <!--td><apex:outputText value="{0,number,#,##0.##}"><apex:param value="{!item.Pallets__c}"/></apex:outputText></td-->
+                        <td>{!IF(ISBLANK(item.Product2.Box_s_Per_Pallet__c), '', TEXT(item.Product2.Box_s_Per_Pallet__c))}</td>
                         <td><apex:outputText value="{0,number,#,##0}"><apex:param value="{!item.Quantity}"/></apex:outputText></td>
-                        <!--td><apex:outputText value="{0,number,#,##0.####}"><apex:param value="{!item.Sub_Quantity__c}"/></apex:outputText> {!item.UnitOfMeasure}!></td-->
-                        <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
-                        <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.Gross_Amount__c}"/></apex:outputText></td>
+                        <td><apex:outputText value="{0,number,#,##0.###}"><apex:param value="{!item.Quantity_SQM__c}"/></apex:outputText> SqM</td>
+                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
+                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.TotalPrice}"/></apex:outputText></td>
                     </tr>
                     <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
                 </apex:repeat>
             </tbody>
         </table>
+
+        <div style="border-bottom: 2px solid #e0e0e0; margin: 20px 0;"></div>
+        <div class="clear"></div>
         
-        <table class="header-table" style="page-break-after: always;">
-            <tr>
-                <td class="left">
-                </td>
-                
-                <td class="right">
-                    <div class="totals-row">
-                        <span class="totals-label">Total</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Total_Price__c}"/></apex:outputText></span>
-                    </div>
-                    <div class="totals-row">
-                        <span class="totals-label">Total Taxable Amount</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Total_Price__c}"/></apex:outputText></span>
-                    </div>
-                    <div class="totals-row">
-                        <span class="totals-label">Discount Amount</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Discounted_Amount__c}"/></apex:outputText></span>
-                    </div>
-                    <div class="totals-row">
-                        <span class="totals-label">Tax %</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.VAT__c}"/></apex:outputText></span>
-                    </div>
-                    <div class="totals-row">
-                        <span class="totals-label">Tax Amount</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Tax_Amount__c}"/></apex:outputText></span>
-                    </div>
-                    <div class="totals-row">
-                        <span class="totals-label">Grand Total</span>
-                        <span class="totals-value">AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Grand_Total__c}"/></apex:outputText></span>
-                    </div>
-                </td>
-            </tr>
-        </table>
-        
-        <div style="margin-top: 20px;">
-            <div class="section-title">Tax Summary</div>
-            <table class="summary-table">
+        <div class="quote-container">
+            <table style="width:100%; border-collapse:collapse;">
                 <tr>
-                    <th width="70%">Tax Details</th>
-                    <th width="15%">Taxable Amount</th>
-                    <th width="15%">Tax</th>
-                </tr>
-                <tr>
-                    <td>VAT 5%</td>
-                    <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Subtotal - quote.Discount}"/></apex:outputText></td>
-                    <td>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Tax}"/></apex:outputText></td>
-                </tr>
-                <tr>
-                    <td><strong>Total</strong></td>
-                    <td><strong>AED<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.TotalPrice}"/></apex:outputText></strong></td>
+                    <td style="width:45%; vertical-align:top; padding-left:10px;">
+                        <!-- Left side content can go here -->
+                    </td>
+                    <td style="width:55%; vertical-align:top; padding-right:10px;">
+                        <table class="mytable">
+                            <tr class="grand-total">
+                                <td><strong>Total</strong></td>
+                                <td>{!quote.CurrencyIsoCode} {!quote.Total_Price__c}</td>
+                            </tr>
+                            <tr style="{!IF(AND(NOT(ISNULL(quote.Discounted_Amount__c)), quote.Discounted_Amount__c > 0), '', 'display:none;')}">
+                                <td class="label"><strong>Discount Amount</strong></td>
+                                <td class="value">{!quote.CurrencyIsoCode} {!quote.Discounted_Amount__c}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Taxable Amount</strong></td>
+                                <td>{!quote.CurrencyIsoCode} {!quote.Total_Price__c}</td>
+                            </tr>
+                            <tr>
+                                <td class="label"><strong>Tax %</strong></td>
+                                <td class="value">{!quote.VAT__c}%</td>
+                            </tr>
+                            <tr>
+                                <td class="label"><strong>Tax Amount</strong></td>
+                                <td class="value">{!quote.CurrencyIsoCode} {!quote.Tax_Amount__c}</td>
+                            </tr>
+                            <tr class="net-total">
+                                <td><strong>Grand Total</strong></td>
+                                <td>{!quote.CurrencyIsoCode} {!quote.Grand_Total__c}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="height:10px; border:none; background:none;"></td>
+                            </tr>
+                        </table>
+                    </td>
                 </tr>
             </table>
         </div>
+
+        <div class="clear"></div>
         
-        <div style="margin-top: 20px;">
-            <table class="summary-table">
+        <div style="page-break-before: always;">
+            <div class="bank-details">
+                <p><strong>Account Name:</strong> FLOORWORLD LLC</p>
+                <p><strong>Bank:</strong> Emirates NBD</p>
+                <p><strong>Account No.:</strong> 1014436622301</p>
+                <p><strong>IBAN No.:</strong> AE960260001014436622301</p>
+                <p><strong>Branch Name:</strong> Emirates Mall Branch</p>
+                <p><strong>Swift Code:</strong> EBILAEAD</p>
+            </div>
+            
+            <div class="section-title">Tax Summary</div>
+            <table class="tax-summary-table">
+                <thead>
+                    <tr>
+                        <th width="50%">Tax Details</th>
+                        <th width="25%">Taxable Amount</th>
+                        <th width="25%">Tax</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Vat {!quote.VAT__c}%</td>
+                        <td>{!quote.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Total_Price__c}"/></apex:outputText></td>
+                        <td>{!quote.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Tax_Amount__c}"/></apex:outputText></td>
+                    </tr>
+                    <tr style="font-weight: bold;">
+                        <td>Total</td>
+                        <td>{!quote.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Tax_Amount__c}"/></apex:outputText></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="border-bottom: 2px solid #e0e0e0; margin: 20px 0;"></div>
+            
+            <table class="quote-details-table">
                 <tr>
                     <td class="label">Supply Type</td>
                     <td>{!quote.Supply_Type__c}</td>
                 </tr>
                 <tr>
-                    <td class="label">Goods Available</td>
-                    <td></td>
+                    <td class="label">Good Available</td>
+                    <td>{!quote.Good_Available__c}</td>
                 </tr>
                 <tr>
                     <td class="label">Shipping Method</td>
@@ -405,68 +534,151 @@
                 </tr>
                 <tr>
                     <td class="label">Payment Terms</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="label">Quote Validity</td>
-                    <td><apex:outputText value="{0,date,M/d/yyyy}"><apex:param value="{!quote.ExpirationDate}"/></apex:outputText></td>
+                    <td>{!quote.Terms__c}</td>
                 </tr>
             </table>
-        </div>
-        
-        <div style="margin-top: 20px;">
-            <div class="section-title">Other Instructions</div>
-            <ol>
-                <li>Sub floor condition and level needs to be check after removal of existing skirting.</li>
-                <li>Any superficial damage to wall following the removal of existing skirting will not be responsibility of Floorworld.</li>
-                <li>Any additional material or works required will be charged separately.</li>
-                <li>No Skirting in the staircase. Existing marble skirting will not be removed.</li>
-            </ol>
-        </div>
-        
-        <div class="page-break">
-            <div class="terms-section">
-                <div class="section-title">Quotation Terms and Conditions</div>
-                
-                <p><strong>1. Cancellations</strong> - We will consider, but not be bound to accept, any request for cancellation of an order, and acceptance shall be on such terms as may be agreed by us in writing. We reserve the right to levy an administration charge (minimum 25%) together with any manufacturing costs incurred whilst processing an order. No requests for cancellation will be considered for all Engineers' wood flooring, wood accessories or where it is a custom design, has been specially purchased locally or internationally as a non-stock item. No requests for cancellation will be considered more than 1 month after Sales Order confirmation date.</p>
-                
-                <p><strong>2. Returns</strong> - We do not normally accept the return of perfect goods if correctly supplied as ordered. We therefore strongly recommend that customers check quantity, colour and product requirements carefully before ordering. If goods are accepted for return at the company's discretion, we reserve the right to levy an administration charge (minimum 25%) together with carriage.</p>
-                
-                <p><strong>3. Storage and Delivery</strong> - Delivery as mentioned in the shipment method will only commence when received cash or cleared funds in our bank account. This will exclude Saturdays and Sundays and placed the next working day that follows.</p>
-                
-                <p><strong>3.A</strong> We reserve the right to charge a storage fee of 500 Dhs/month for goods held in our warehouse for a period over one (1) month. This will commence on or after 30 days from date of Sales Order confirmation or 30days from the no. of days/weeks given in the shipment method.</p>
-                
-                <p><strong>4. Collections</strong> - Arrangements can be made for collection from our premises by advance notice and agreement. Usually Monday to Friday (8 a.m. to 5 p.m.) excluding public holidays. We kindly request customers, however, to make such arrangements well in advance of intended collection of goods required. We regret that we cannot accept any claims whatsoever in such cases, if goods are unavailable at the time of collection. All promises of stock availability are given in good faith, but should not be regarded as guaranteed correct.</p>
-                
-                <p><strong>5. Settlement</strong> - Cleared funds are required from non-credit account customers before goods can be released from our warehouse. Prepayment may be made by cleared cheque from a recognized U.A.E bank, cash, credit card or direct bank transfer. Note: This must be a minimum of 3 days prior to the agreed delivery date or on collection from our warehouse.</p>
-                
-                <p><strong>6. Acclimatization</strong> - A maintained ambient room temperature of between 18-26 degrees celsius is required prior to, during and after installation. Relative humidity levels between 30 - 60% also need to be present. All flooring products require 24 hours acclimatization with temperatures to remain between 18 - 26 degrees Celsius, relative humidity levels between 30 - 60% also need to be present. Failure to maintain these conditions may result in damaging the installed goods and null and void your warranty.</p>
-                
-                <p><strong>7. Installations</strong> - Floorworld will make every effort to start and complete each installation within the estimated time frame, due to the nature of the work installation times may overrun due to various factors that may be out of the control of Floorworld. The company reserves the right to alter both start and completions dates due to operational or exceptional circumstances, this sales order does not constitute a written contract relating to the schedule or duration of the installation process.</p>
-                
-                <p><strong>7.A</strong> Rooms must be empty and clean and all existing floor coverings removed. If Floorworld LLC are required to remove any furniture and/ or existing floor coverings then an additional charges will be levied. This charge will be agreed prior to any commencement of work. All furniture such as cabinets and wardrobes must be emptied by the client prior to work commence to avoid damage to the contents. Floorworld LLC will not accept responsibility for any damage caused in moving furniture/appliances.</p>
-                
-                <p><strong>7.B</strong> Doors will only be removed and re-hung where there is no alteration to the floor height. If doors require re-fitting, an additional charge of AED 100.00 per door will be levied.</p>
-                
-                <p><strong>7.C</strong> Those responsible for the design and construction of the sub floor should ensure that it meets the requirements for hardness, levels and surface regularities (BS 8204-1:2003+Amendment 1:2009), dryness and other design parameters. On inspection, prior to commencement, if a subfloor is found to be unsuitable, rectification work must be carried out - additional work required will incur an additional charge. Where the subfloor is not sufficiently dry, an Epoxy Damp Proof Membrane (or any other specified) may be recommended prior to installation of the flooring - at an additional cost. If any recommendation is not implemented, then Floorworld LLC will not offer any guarantee for the installation of the flooring. For each flooring installation that Floorworld undertakes, Floorworld will conduct all necessary moisture tests to the walls and subfloor to ensure suitability, if moisture readings above 10% are present then remedial work will be needed at extra cost prior to the installation commencing. Once all flooring, skirting and profiles have been installed it is the responsibility of the client/homeowner to ensure the property is adequately protected against the manifestation of moisture or mould within the walls and subfloor. The failure of skirting, profiles or flooring due to damage from moisture or mould after installation will not be covered under any product warranty if moisture readings of higher than 10% are found to be present.</p>
-                
-                <p><strong>7.D</strong> Adequate lighting is required and should be supplied by the client to ensure accurate cutting and laying of flooring materials.</p>
-                
-                <p><strong>7.E</strong> Electricity supply is required and should be supplied by the client.</p>
-                
-                <p><strong>7.F</strong> The client must provide Water supply in order to mix certain products. This is particularly relevant for preparation and levelling work.</p>
-                
-                <p><strong>7.G</strong> Bathroom and toilet areas should have the bath panel, sink pedestal, toilet and any other standing units removed (prior to commencement of works) to enable a correctly finished floor. Floorworld LLC are not authorized or qualified to disconnect or re-connect any type of appliances. Kitchen areas should have (prior to commencement of works) the plinths removed from the units and, where floors are to be taken under electrical appliances, e.g. Fridges, freezers, tumble dryers, dish washers, washing machines etc., it is the clients responsibility to ensure they have been removed safely and all plumbing and wiring has been disconnected.</p>
-                
-                <p><strong>7.H</strong> With every installation the flooring planks will be installed in a completely random configuration, should you wish the floor to be installed in any other configuration such as brick bond then this must be highlighted to the Sales Person at the point of order to ensure extra wastage has been added to the final quantity to achieve the desired effect.</p>
-                
-                <p><strong>7.I</strong> It is the client/homeowners responsibility to ensure the property is protected against termites or wood boring insects, such manifestations and subsequent damage thereby caused are not covered under any product warranty.</p>
-                
-                <p><strong>8. Protection</strong> - Protection of the installed floor will be the responsibility of the client/main contractor. Floorworld LLC will not be responsible for damage incurred by the client or other trades after installation is completed. All types of flooring must be protected from receiving surface scratches while moving furniture, all furniture legs should have self-adhesive felt pads or similar attached to prevent surface scratches from taking place, if such scratches do occur they not be deemed as a product fault and will not be covered under warranty from either Floorworld or the manufacturer.</p>
-                
-                <p><strong>9. Title To Goods</strong> - We reserve the right to retain, if we should so decide, the title to goods supplied under these terms of sale until the purchaser has discharged all sums owing to us. Until such discharge, the purchaser shall hold the goods, whether or not sold to another party upon trust for ourselves and grant us the right, if we so wish, to enter the purchaser's or its agent's premises to recover any such goods. Please note: If you experience any difficulties with, or are unsure of any of the points contained within the Terms and Conditions, please do not hesitate to contact Floorworld LLC by telephone on 04 889 5661 email to sales@floorworld.com</p>
-                
+
+            <div style="border-bottom: 2px solid #e0e0e0; margin: 20px 0;"></div>
+            
+            <div class="other-instruction">
+                <div class="instruction-title">
+                    <div class="english-text">Other Instruction</div>
+                </div>
+                <div class="instruction-content">
+                    <ol>
+                        <li>Sub floor condition and level needs to be check after removal of existing skirting.</li>
+                        <li>Any superficial damage to wall following the removal of existing skirting will not be responsibility of Floorworld.</li>
+                        <li>Any additional material or works required will be charged separately.</li>
+                        <li>No Skirting in the staircase. Existing marble skirting will not be removed.</li>
+                    </ol>
+                </div>
             </div>
+        
+        </div>
+
+        <div>
+            <table class="terms-section">
+                <tr>
+                    <th width="5%"></th>
+                    <td>
+                        <strong>Quotation Terms and Conditions</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <th width="5%">1</th>
+                    <td>
+                        <p><strong>Cancellations</strong> - We will consider, but not be bound to accept, any request for cancellation of an order, and acceptance shall be on such terms as may be agreed by us in writing. We reserve the right to levy an administration charge (minimum 25%) together with any manufacturing costs incurred whilst processing an order. No requests for cancellation will be considered for all Engineers' wood flooring, wood accessories or where it is a custom design, has been specially purchased locally or internationally as a non-stock item. No requests for cancellation will be considered more than 1 month after Sales Order confirmation date.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>2</th>
+                    <td>
+                        <p><strong>Returns</strong> - We do not normally accept the return of perfect goods if correctly supplied as ordered. We therefore strongly recommend that customers check quantity, colour and product requirements carefully before ordering. If goods are accepted for return at the company's discretion, we reserve the right to levy an administration charge (minimum 25%) together with carriage.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>3</th>
+                    <td>
+                        <p><strong>Storage and Delivery</strong> - Delivery as mentioned in the shipment method will only commence when received cash or cleared funds in our bank account. This will exclude Saturdays and Sundays and placed the next working day that follows.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>3.A</th>
+                    <td>
+                        <p><strong></strong> We reserve the right to charge a storage fee of 500 Dhs/month for goods held in our warehouse for a period over one (1) month. This will commence on or after 30 days from date of Sales Order confirmation or 30days from the no. of days/weeks given in the shipment method.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>4</th>
+                    <td>
+                        <p><strong>Collections</strong> - Arrangements can be made for collection from our premises by advance notice and agreement. Usually Monday to Friday (8 a.m. to 5 p.m.) excluding public holidays. We kindly request customers, however, to make such arrangements well in advance of intended collection of goods required. We regret that we cannot accept any claims whatsoever in such cases, if goods are unavailable at the time of collection. All promises of stock availability are given in good faith, but should not be regarded as guaranteed correct.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>5</th>
+                    <td>
+                         <p><strong>Settlement</strong> - Cleared funds are required from non-credit account customers before goods can be released from our warehouse. Prepayment may be made by cleared cheque from a recognized U.A.E bank, cash, credit card or direct bank transfer. Note: This must be a minimum of 3 days prior to the agreed delivery date or on collection from our warehouse.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th width="5%">6</th>
+                    <td>
+                         <p><strong>Acclimatization</strong> - A maintained ambient room temperature of between 18-26 degrees celsius is required prior to, during and after installation. Relative humidity levels between 30 - 60% also need to be present. All flooring products require 24 hours acclimatization with temperatures to remain between 18 - 26 degrees Celsius, relative humidity levels between 30 - 60% also need to be present. Failure to maintain these conditions may result in damaging the installed goods and null and void your warranty.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7</th>
+                    <td>
+                        <p><strong>Installations</strong> - Floorworld will make every effort to start and complete each installation within the estimated time frame, due to the nature of the work installation times may overrun due to various factors that may be out of the control of Floorworld. The company reserves the right to alter both start and completions dates due to operational or exceptional circumstances, this sales order does not constitute a written contract relating to the schedule or duration of the installation process.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.A</th>
+                    <td>
+                        <p><strong></strong> Rooms must be empty and clean and all existing floor coverings removed. If Floorworld LLC are required to remove any furniture and/ or existing floor coverings then an additional charges will be levied. This charge will be agreed prior to any commencement of work. All furniture such as cabinets and wardrobes must be emptied by the client prior to work commence to avoid damage to the contents. Floorworld LLC will not accept responsibility for any damage caused in moving furniture/appliances.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.B</th>
+                    <td>
+                        <p><strong></strong> Doors will only be removed and re-hung where there is no alteration to the floor height. If doors require re-fitting, an additional charge of AED 100.00 per door will be levied.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.C</th>
+                    <td>
+                        <p><strong></strong> Those responsible for the design and construction of the sub floor should ensure that it meets the requirements for hardness, levels and surface regularities (BS 8204-1:2003+Amendment 1:2009), dryness and other design parameters. On inspection, prior to commencement, if a subfloor is found to be unsuitable, rectification work must be carried out - additional work required will incur an additional charge. Where the subfloor is not sufficiently dry, an Epoxy Damp Proof Membrane (or any other specified) may be recommended prior to installation of the flooring - at an additional cost. If any recommendation is not implemented, then Floorworld LLC will not offer any guarantee for the installation of the flooring. For each flooring installation that Floorworld undertakes, Floorworld will conduct all necessary moisture tests to the walls and subfloor to ensure suitability, if moisture readings above 10% are present then remedial work will be needed at extra cost prior to the installation commencing. Once all flooring, skirting and profiles have been installed it is the responsibility of the client/homeowner to ensure the property is adequately protected against the manifestation of moisture or mould within the walls and subfloor. The failure of skirting, profiles or flooring due to damage from moisture or mould after installation will not be covered under any product warranty if moisture readings of higher than 10% are found to be present.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.D</th>
+                    <td>
+                        <p><strong></strong> Adequate lighting is required and should be supplied by the client to ensure accurate cutting and laying of flooring materials.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.E</th>
+                    <td>
+                      <p><strong></strong> Electricity supply is required and should be supplied by the client.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.F</th>
+                    <td>
+                        <p><strong></strong> The client must provide Water supply in order to mix certain products. This is particularly relevant for preparation and levelling work.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.G</th>
+                    <td>
+                        <p><strong></strong> Bathroom and toilet areas should have the bath panel, sink pedestal, toilet and any other standing units removed (prior to commencement of works) to enable a correctly finished floor. Floorworld LLC are not authorized or qualified to disconnect or re-connect any type of appliances. Kitchen areas should have (prior to commencement of works) the plinths removed from the units and, where floors are to be taken under electrical appliances, e.g. Fridges, freezers, tumble dryers, dish washers, washing machines etc., it is the clients responsibility to ensure they have been removed safely and all plumbing and wiring has been disconnected.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.H</th>
+                    <td>
+                        <p><strong></strong> With every installation the flooring planks will be installed in a completely random configuration, should you wish the floor to be installed in any other configuration such as brick bond then this must be highlighted to the Sales Person at the point of order to ensure extra wastage has been added to the final quantity to achieve the desired effect.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.I</th>
+                    <td>
+                      <p><strong></strong> It is the client/homeowners responsibility to ensure the property is protected against termites or wood boring insects, such manifestations and subsequent damage thereby caused are not covered under any product warranty.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>8</th>
+                    <td>
+                      <p><strong>Protection</strong> - Protection of the installed floor will be the responsibility of the client/main contractor. Floorworld LLC will not be responsible for damage incurred by the client or other trades after installation is completed. All types of flooring must be protected from receiving surface scratches while moving furniture, all furniture legs should have self-adhesive felt pads or similar attached to prevent surface scratches from taking place, if such scratches do occur they not be deemed as a product fault and will not be covered under warranty from either Floorworld or the manufacturer.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>9</th>
+                    <td>
+                      <p><strong>Title To Goods</strong> - We reserve the right to retain, if we should so decide, the title to goods supplied under these terms of sale until the purchaser has discharged all sums owing to us. Until such discharge, the purchaser shall hold the goods, whether or not sold to another party upon trust for ourselves and grant us the right, if we so wish, to enter the purchaser's or its agent's premises to recover any such goods. Please note: If you experience any difficulties with, or are unsure of any of the points contained within the Terms and Conditions, please do not hesitate to contact Floorworld LLC by telephone on 04 889 5661 email to sales@floorworld.com</p>
+                    </td>
+                </tr>
+            </table>
         </div>
     </body>
 </apex:page>
