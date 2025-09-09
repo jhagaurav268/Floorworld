@@ -61,7 +61,8 @@ public with sharing class CommissionTriggerHelper {
             Commission_Amount__c = (p.Amount__c * discount) / 100,
             Status__c = 'Pending',
             Discount_Slab_Used__c = discount + '%',
-            Type__c = 'Vendor'
+            Type__c = 'Vendor',
+            CurrencyIsoCode = ord.CurrencyIsoCode
         );
     }
 
@@ -77,7 +78,8 @@ public with sharing class CommissionTriggerHelper {
             Status__c = 'Pending',
             Discount_Slab_Used__c = formatSlabLabel(policy),
             Total_Discount_Used__c = discount,
-            Type__c = 'Sales Rep'
+            Type__c = 'Sales Rep', 
+            CurrencyIsoCode = ord.CurrencyIsoCode
         );
     }
 
@@ -128,7 +130,8 @@ public with sharing class CommissionTriggerHelper {
         for (Payment__c p : payments) orderIds.add(p.Order__c);
 
         return new Map<Id, Order>([
-            SELECT Id, Branch__c, Branch__r.Name, Net_Discount__c, AccountId, Account.Name, Sales_Rep__c, Sales_Rep__r.Name, Vendor_Commission__c
+            SELECT Id, Branch__c, Branch__r.Name, Net_Discount__c, AccountId, 
+            Account.Name, Sales_Rep__c, Sales_Rep__r.Name, Vendor_Commission__c, CurrencyIsoCode
             FROM Order
             WHERE Id IN :orderIds
         ]);
