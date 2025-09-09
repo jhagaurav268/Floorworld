@@ -16,6 +16,10 @@ public with sharing class QuoteSignController {
                 LIMIT 1
             ];
             
+            if (String.isBlank(q.Email)) {
+                throw new AuraHandledException('No recipient email found for this Quote');
+            }
+
             ZohoSignService.SignatureRequest signatureRequest = new ZohoSignService.SignatureRequest(
                 quoteId,
                 q.Account.Name,

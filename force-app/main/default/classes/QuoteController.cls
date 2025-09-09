@@ -4,94 +4,113 @@ public class QuoteController {
     public static List<QuoteLineItemDTO> getExistingQuoteLineItems(Id quoteId) {
         List<QuoteLineItemDTO> result = new List<QuoteLineItemDTO>();
         
-        Quote quote = [
-            SELECT Id, Discount__c, Discounted_Amount__c 
-            FROM Quote 
-            WHERE Id = :quoteId 
-            LIMIT 1
-        ];
-        
-        List<QuoteLineItem> qlis = [
-            SELECT Id, QuoteId, Product2Id, Product2.Name, Description, Quantity, UnitPrice, Product2.Family,
-            Location__c, Net_Area_SQM_LM__c, Wastage__c, Rate__c, Quantity_SQM__c,
-            Discount, Length_m__c, Width_m__c, Total_Area__c, Unit__c, Date__c, Gross_Amount__c, Tax_Amount__c, Amount__c,
-            Row_Number__c
-            FROM QuoteLineItem
-            WHERE QuoteId = :quoteId
-            ORDER BY Row_Number__c ASC NULLS LAST, CreatedDate ASC
-        ];
-        
-        for (QuoteLineItem qli : qlis) {
-            QuoteLineItemDTO dto = new QuoteLineItemDTO();
-            dto.salesforceId = qli.Id;
-            dto.quoteId = qli.QuoteId;
-            dto.productName = qli.Product2 != null ? qli.Product2.Name : '';
-            dto.location = qli.Location__c;
-            dto.productId = qli.Product2Id;
-            dto.productDescription = qli.Description;
-            dto.productUnitPrice = qli.UnitPrice;
-            dto.netArea = qli.Net_Area_SQM_LM__c;
-            dto.wastage = qli.Wastage__c;
-            dto.rate = qli.Rate__c;
-            dto.unitPrice = qli.UnitPrice;
-            dto.quantity = qli.Quantity;
-            dto.quantityArea = qli.Quantity_SQM__c;
-            dto.discountPercentage = qli.Discount;
-            dto.length = qli.Length_m__c != null ? String.valueOf(qli.Length_m__c) : null;
-            dto.width = qli.Width_m__c != null ? String.valueOf(qli.Width_m__c) : null;
-            dto.totalArea = qli.Total_Area__c;
-            dto.units = qli.Unit__c;
-            dto.rowId = qli.Id; 
-            dto.price = (qli.UnitPrice != null && qli.Quantity != null) ? qli.UnitPrice * qli.Quantity : null;
-            dto.amount = qli.Amount__c;
-            dto.taxAmount = qli.Tax_Amount__c;
-            dto.grossAmount = qli.Gross_Amount__c;
-            dto.productFamily = qli.Product2 != null ? qli.Product2.Family : '';
-            dto.rowNumber = qli.Row_Number__c != null ? Integer.valueOf(qli.Row_Number__c) : null;
+        try {
             
-            List<String> individualDiscountProducts = new List<String>{'5% Discount', '10% Discount', '15% Discount', '20% Discount'};
-            dto.isIndividualDiscount = individualDiscountProducts.contains(dto.productName);
+            Quote quote = [
+                SELECT Id, Discount__c, Discounted_Amount__c 
+                FROM Quote 
+                WHERE Id = :quoteId 
+                LIMIT 1
+            ];
             
-            result.add(dto);
-        }
-        
-        if (quote.Discount__c != null && quote.Discount__c > 0) {
-            Decimal totalRate = 0;
-            Decimal totalUnitPrice = 0;
-            Decimal totalAmount = 0;
-            Decimal totalTaxAmount = 0;
-            Decimal totalGrossAmount = 0;
+            List<QuoteLineItem> qlis = [
+                SELECT Id, QuoteId, Product2Id, Product2.Name, Description, Quantity, UnitPrice, Product2.Family,
+                Location__c, Net_Area_SQM_LM__c, Wastage__c, Rate__c, Quantity_SQM__c,
+                Discount, Length_m__c, Width_m__c, Total_Area__c, Unit__c, Date__c, Gross_Amount__c, Tax_Amount__c, Amount__c,
+                Row_Number__c, Product2.Est_Landed_Cost_Main__c, Product2.Intercompany_Profit_Margin__c, Product2.Intercompany_Price__c,
+                Product2.Transportation_Charges__c, Product2.Estimated_Landed_Cost_Oman__c, Product2.Box_s_Per_Pallet__c, Product2.ProductCode,
+                Product2.Calculation_Basis__c, Est_Extended_Cost__c, Est_Gross_Profit__c, Est_Gross_Profit_Percent__c
+                FROM QuoteLineItem
+                WHERE QuoteId = :quoteId
+                ORDER BY Row_Number__c ASC NULLS LAST, CreatedDate ASC
+            ];
             
-            for (QuoteLineItemDTO item : result) {
-                if (item.rate != null) totalRate += item.rate;
-                if (item.unitPrice != null) totalUnitPrice += item.unitPrice;
-                if (item.amount != null) totalAmount += item.amount;
-                if (item.taxAmount != null) totalTaxAmount += item.taxAmount;
-                if (item.grossAmount != null) totalGrossAmount += item.grossAmount;
+            for (QuoteLineItem qli : qlis) {
+                QuoteLineItemDTO dto = new QuoteLineItemDTO();
+                dto.salesforceId = qli.Id;
+                dto.quoteId = qli.QuoteId;
+                dto.productName = qli.Product2 != null ? qli.Product2.Name : '';
+                dto.location = qli.Location__c;
+                dto.productId = qli.Product2Id;
+                dto.productDescription = qli.Description;
+                dto.productUnitPrice = qli.UnitPrice;
+                dto.netArea = qli.Net_Area_SQM_LM__c;
+                dto.wastage = qli.Wastage__c;
+                dto.rate = qli.Rate__c;
+                dto.unitPrice = qli.UnitPrice;
+                dto.quantity = qli.Quantity;
+                dto.quantityArea = qli.Quantity_SQM__c;
+                dto.discountPercentage = qli.Discount;
+                dto.length = qli.Length_m__c != null ? String.valueOf(qli.Length_m__c) : null;
+                dto.width = qli.Width_m__c != null ? String.valueOf(qli.Width_m__c) : null;
+                dto.totalArea = qli.Total_Area__c;
+                dto.units = qli.Unit__c;
+                dto.rowId = qli.Id; 
+                dto.price = (qli.UnitPrice != null && qli.Quantity != null) ? qli.UnitPrice * qli.Quantity : null;
+                dto.amount = qli.Amount__c;
+                dto.taxAmount = qli.Tax_Amount__c;
+                dto.grossAmount = qli.Gross_Amount__c;
+                dto.productFamily = qli.Product2 != null ? qli.Product2.Family : '';
+                dto.rowNumber = qli.Row_Number__c != null ? Integer.valueOf(qli.Row_Number__c) : null;
+                dto.estLandedCostMain = qli.Product2?.Est_Landed_Cost_Main__c;
+                dto.intercompanyProfitMargin = qli.Product2?.Intercompany_Profit_Margin__c;
+                dto.intercompanyPrice = qli.Product2?.Intercompany_Price__c;
+                dto.transportationChargesPercent = qli.Product2?.Transportation_Charges__c;
+                dto.estimatedLandedCostOman = qli.Product2?.Estimated_Landed_Cost_Oman__c;
+                dto.boxsPerPallet = qli.Product2?.Box_s_Per_Pallet__c;
+                dto.productCode = qli.Product2?.ProductCode;
+                dto.calculationBasis = qli.Product2?.Calculation_Basis__c;
+                dto.estExtendedCost = qli.Est_Extended_Cost__c;
+                dto.estGrossProfit = qli.Est_Gross_Profit__c;
+                dto.estGrossProfitPercent = qli.Est_Gross_Profit_Percent__c;
+                
+                List<String> individualDiscountProducts = new List<String>{'5% Discount', '10% Discount', '15% Discount', '20% Discount'};
+                    dto.isIndividualDiscount = individualDiscountProducts.contains(dto.productName);
+                
+                result.add(dto);
             }
             
-            Decimal discountRate = (totalRate * quote.Discount__c) / 100;
-            Decimal discountUnitPrice = (totalUnitPrice * quote.Discount__c) / 100;
-            Decimal discountAmountOnly = (totalAmount * quote.Discount__c) / 100;
-            Decimal discountTaxAmount = (totalTaxAmount * quote.Discount__c) / 100;
-            Decimal discountGrossAmount = (totalGrossAmount * quote.Discount__c) / 100;
-            
-            QuoteLineItemDTO discountDto = new QuoteLineItemDTO();
-            discountDto.salesforceId = null;
-            discountDto.quoteId = quoteId;
-            discountDto.productName = 'Discount (' + quote.Discount__c + '%)';
-            discountDto.location = 'Discount';
-            discountDto.productDescription = quote.Discount__c + '% discount on total amount';
-            discountDto.quantity = 1;
-            discountDto.rate = -discountRate;
-            discountDto.unitPrice = -discountUnitPrice;
-            discountDto.amount = -discountAmountOnly;
-            discountDto.taxAmount = -discountTaxAmount;
-            discountDto.grossAmount = -discountGrossAmount;
-            discountDto.productFamily = 'Discount';
-            discountDto.family = 'Discount';
-            discountDto.rowNumber = 9999;
-            result.add(discountDto);
+            if (quote.Discount__c != null && quote.Discount__c > 0) {
+                Decimal totalRate = 0;
+                Decimal totalUnitPrice = 0;
+                Decimal totalAmount = 0;
+                Decimal totalTaxAmount = 0;
+                Decimal totalGrossAmount = 0;
+                
+                for (QuoteLineItemDTO item : result) {
+                    if (item.rate != null) totalRate += item.rate;
+                    if (item.unitPrice != null) totalUnitPrice += item.unitPrice;
+                    if (item.amount != null) totalAmount += item.amount;
+                    if (item.taxAmount != null) totalTaxAmount += item.taxAmount;
+                    if (item.grossAmount != null) totalGrossAmount += item.grossAmount;
+                }
+                
+                Decimal discountRate = (totalRate * quote.Discount__c) / 100;
+                Decimal discountUnitPrice = (totalUnitPrice * quote.Discount__c) / 100;
+                Decimal discountAmountOnly = (totalAmount * quote.Discount__c) / 100;
+                Decimal discountTaxAmount = (totalTaxAmount * quote.Discount__c) / 100;
+                Decimal discountGrossAmount = (totalGrossAmount * quote.Discount__c) / 100;
+                
+                QuoteLineItemDTO discountDto = new QuoteLineItemDTO();
+                discountDto.salesforceId = null;
+                discountDto.quoteId = quoteId;
+                discountDto.productName = 'Discount (' + quote.Discount__c + '%)';
+                discountDto.location = 'Discount';
+                discountDto.productDescription = quote.Discount__c + '% discount on total amount';
+                discountDto.quantity = 1;
+                discountDto.rate = -discountRate;
+                discountDto.unitPrice = -discountUnitPrice;
+                discountDto.amount = -discountAmountOnly;
+                discountDto.taxAmount = -discountTaxAmount;
+                discountDto.grossAmount = -discountGrossAmount;
+                discountDto.productFamily = 'Discount';
+                discountDto.family = 'Discount';
+                discountDto.rowNumber = 9999;
+                result.add(discountDto);
+            }
+        } catch (Exception ex) {
+            HandleCustomException.LogException(ex, String.valueOf(quoteId));
+            throw new AuraHandledException('Error retrieving quote line items: ' + ex.getMessage());
         }
         
         return result;
@@ -99,6 +118,7 @@ public class QuoteController {
     
     @AuraEnabled
     public static Map<String, String> upsertQuoteLineItems(Object lineItemsData, Decimal discountPercent, Decimal discountAmount, List<String> deletedRowIds) {
+        Id quoteId;
         try{
             if (deletedRowIds != null && !deletedRowIds.isEmpty()) {
                 List<QuoteLineItem> itemsToDelete = [
@@ -107,7 +127,7 @@ public class QuoteController {
                 ];
                 delete itemsToDelete;
             }
-
+            
             List<Object> lineItemsObj = (List<Object>) JSON.deserializeUntyped(JSON.serialize(lineItemsData));
             
             List<QuoteLineItemWrapper> lineItems = new List<QuoteLineItemWrapper>();
@@ -145,6 +165,9 @@ public class QuoteController {
                 wrapper.itemType = (String) itemMap.get('type');
                 wrapper.isIndividualDiscount = (Boolean) itemMap.get('isIndividualDiscount');
                 wrapper.rowNumber = itemMap.get('rowNumber') != null ? Integer.valueOf(String.valueOf(itemMap.get('rowNumber'))) : null;
+                wrapper.estExtendedCost = itemMap.get('estExtendedCost') != null ? Decimal.valueOf(String.valueOf(itemMap.get('estExtendedCost'))) : null;
+                wrapper.estGrossProfit = itemMap.get('estGrossProfit') != null ? Decimal.valueOf(String.valueOf(itemMap.get('estGrossProfit'))) : null;
+                wrapper.estGrossProfitPercent = itemMap.get('estGrossProfitPercent') != null ? Decimal.valueOf(String.valueOf(itemMap.get('estGrossProfitPercent'))) : null;
 
                 lineItems.add(wrapper);
             }
@@ -153,7 +176,6 @@ public class QuoteController {
             Map<String, QuoteLineItem> externalIdToSalesforceIdMap = new Map<String, QuoteLineItem>();
             Map<String, String> discountIdToRowIdMap = new Map<String, String>();
             Map<String, QuoteLineItem> rowIdToQliMap = new Map<String, QuoteLineItem>();
-            Id quoteId;
             
             Pricebook2 floorWorldPB = [SELECT Id FROM Pricebook2 WHERE Name = 'Standard Price Book' AND IsActive = true LIMIT 1];
             
@@ -214,7 +236,10 @@ public class QuoteController {
                 qli.Width_m__c = (item.width != null && item.width != '') ? Decimal.valueOf(item.width) : null;
                 qli.Total_Area__c = (item.totalArea != null) ? item.totalArea : null;
                 qli.Unit__c = item.units;
-                
+                qli.Est_Extended_Cost__c = item.estExtendedCost;
+                qli.Est_Gross_Profit__c = item.estGrossProfit;
+                qli.Est_Gross_Profit_Percent__c = item.estGrossProfitPercent;
+
                 if(item.rowId != null){
                     externalIdToSalesforceIdMap.put(item.rowId, qli);
                     rowIdToQliMap.put(item.rowId, qli); 
@@ -225,19 +250,6 @@ public class QuoteController {
                 
                 quoteLineItemsToUpsert.add(qli);
             }
-
-            Quote q = [
-                SELECT Id, Pricebook2Id 
-                FROM Quote 
-                WHERE Id = :quoteId 
-                LIMIT 1
-            ];
-
-            if (q.Pricebook2Id == null) {
-                q.Pricebook2Id = floorWorldPB.Id;
-                update q;
-            }
-            
             
             if (!quoteLineItemsToUpsert.isEmpty()) {
                 Database.upsert(quoteLineItemsToUpsert, true);
@@ -273,36 +285,44 @@ public class QuoteController {
             return rowIdToSalesforceIdMap;
             
         } catch (Exception ex) {
-            throw new AuraHandledException('Error while creating Quote Line Items: ' + ex.getMessage());
+            HandleCustomException.LogException(ex, String.valueOf(quoteId));
+            throw new AuraHandledException(ex.getMessage());
         }
     }
     
     @AuraEnabled(cacheable=true)
     public static List<PricebookEntry> searchProductItems(String searchKey, Id quoteId) {
-        Quote q = [
-            SELECT CurrencyIsoCode, Pricebook2Id 
-            FROM Quote 
-            WHERE Id = :quoteId 
-            LIMIT 1
-        ];
-        
-        if (q.Pricebook2Id == null) {
-            return new List<PricebookEntry>();
+        try {
+            Quote q = [
+                SELECT CurrencyIsoCode, Pricebook2Id 
+                FROM Quote 
+                WHERE Id = :quoteId 
+                LIMIT 1
+            ];
+            
+            if (q.Pricebook2Id == null) {
+                return new List<PricebookEntry>();
+            }
+            
+            String query = '%' + searchKey + '%';
+            
+            return [
+                SELECT Product2.Name, Product2.ProductCode, UnitPrice, Product2.Description, 
+                Product2.Family, Product2.Primary_Sale_Unit__c, Product2.Width_m__c,
+                Product2.Average_Cost__c, Id, CurrencyIsoCode, Product2.Est_Landed_Cost_Main__c,
+                Product2.Intercompany_Profit_Margin__c, Product2.Intercompany_Price__c, Product2.Transportation_Charges__c,
+                Product2.Estimated_Landed_Cost_Oman__c, Product2.Box_s_Per_Pallet__c, Product2.Calculation_Basis__c
+                FROM PricebookEntry 
+                WHERE Pricebook2Id = :q.Pricebook2Id
+                AND Product2.Name LIKE :query
+                AND CurrencyIsoCode = :q.CurrencyIsoCode
+                AND IsActive = true
+                LIMIT 10
+            ];
+        } catch (Exception ex) {
+            HandleCustomException.LogException(ex, String.valueOf(quoteId));
+            throw new AuraHandledException('Error searching product items: ' + ex.getMessage());
         }
-        
-        String query = '%' + searchKey + '%';
-        
-        return [
-            SELECT Product2.Name, Product2.ProductCode, UnitPrice, Product2.Description, 
-            Product2.Family, Product2.Primary_Sale_Unit__c, Product2.Width_m__c,
-            Product2.Average_Cost__c, Id, CurrencyIsoCode
-            FROM PricebookEntry 
-            WHERE Pricebook2Id = :q.Pricebook2Id
-            AND Product2.Name LIKE :query
-            AND CurrencyIsoCode = :q.CurrencyIsoCode
-            AND IsActive = true
-            LIMIT 10
-        ];
     }
     
     public class QuoteLineItemWrapper {
@@ -330,6 +350,10 @@ public class QuoteController {
         public String itemType;
         public Boolean isIndividualDiscount;
         public Integer rowNumber;
+        public Decimal estExtendedCost;
+        public Decimal estGrossProfit;
+        public Decimal estGrossProfitPercent;
+
     }
     
     public class QuoteLineItemDTO {
@@ -396,6 +420,26 @@ public class QuoteController {
         @AuraEnabled
         public Decimal estExtendedCost { get; set; }
         @AuraEnabled
+        public Decimal estGrossProfit;
+        @AuraEnabled
+        public Decimal estGrossProfitPercent;
+        @AuraEnabled
         public Integer rowNumber { get; set; }
+        @AuraEnabled
+        public String estLandedCostMain { get; set; }
+        @AuraEnabled
+        public Decimal intercompanyProfitMargin { get; set; }
+        @AuraEnabled
+        public String intercompanyPrice { get; set; }
+        @AuraEnabled
+        public Decimal transportationChargesPercent { get; set; }
+        @AuraEnabled
+        public String estimatedLandedCostOman { get; set; }
+        @AuraEnabled
+        public Decimal boxsPerPallet { get; set; }
+        @AuraEnabled
+        public String productCode { get; set; }
+        @AuraEnabled
+        public String calculationBasis { get; set; }
     }
 }
