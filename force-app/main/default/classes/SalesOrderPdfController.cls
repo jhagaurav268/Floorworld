@@ -1,6 +1,7 @@
 public with sharing class SalesOrderPdfController {
     public Order order { get; set; }
     public List<OrderItem> orderProducts { get; set; }
+    public List<Payment__c> payments { get; set; }
     
     public SalesOrderPdfController() {
         String orderId = ApexPages.currentPage().getParameters().get('id');
@@ -42,6 +43,7 @@ public with sharing class SalesOrderPdfController {
                                    OR Description LIKE '%Discount%'))
                               Order By OrderItemNumber ASC];
             
+            payments = [SELECT Id, Name, Amount__c, Order__c, Payment_Date__c FROM Payment__c Where Order__c =: orderId];
         } catch (Exception e) {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
                                                        'Error loading quote data: ' + e.getMessage()));
