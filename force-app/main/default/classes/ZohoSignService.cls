@@ -40,6 +40,18 @@ public with sharing class ZohoSignService {
         }
     }
     
+    private class PdfData {
+        public Blob pdfBlob { get; set; }
+        public String fileName { get; set; }
+        public Integer fileSize { get; set; }
+        
+        public PdfData(Blob pdfBlob, String fileName) {
+            this.pdfBlob = pdfBlob;
+            this.fileName = fileName;
+            this.fileSize = pdfBlob.size();
+        }
+    }
+    
     public static String processDocumentForSignature(SignatureRequest signatureRequest) {
         try {
             if (signatureRequest.recordId == null) {
@@ -61,9 +73,19 @@ public with sharing class ZohoSignService {
     
     private static DocumentCreationResponse createDocument(SignatureRequest signatureRequest) {
         try {
-            ContentVersion contentVersion = getRecordContentVersion(signatureRequest.recordId);
+            PdfData pdfData;
+
+            String sObjectType = String.valueOf(signatureRequest.recordId.getSObjectType());
             
-            if (contentVersion.ContentSize > MAX_FILE_SIZE) {
+            if (sObjectType == 'Quote') {
+                pdfData = renderQuotePdfData(signatureRequest.recordId);
+            }else if (sObjectType == 'Order') {
+                pdfData = renderOrderPdfData(signatureRequest.recordId);
+            } else {
+                throw new AuraHandledException('Unsupported record type for Zoho Sign: ' + sObjectType);
+            }
+            
+            if (pdfData.fileSize > MAX_FILE_SIZE) {
                 throw new AuraHandledException('File size exceeds 10MB limit');
             }
             
@@ -72,7 +94,7 @@ public with sharing class ZohoSignService {
                 signatureRequest.recipientEmail,
                 signatureRequest.requestName
             );
-            HttpResponse response = sendZohoCreateRequest(contentVersion, requestPayload);
+            HttpResponse response = sendZohoCreateRequest(pdfData, requestPayload);
             
             return parseDocumentCreationResponse(response);
             
@@ -81,33 +103,24 @@ public with sharing class ZohoSignService {
         }
     }
     
-    private static ContentVersion getRecordContentVersion(Id recordId) {
-        List<ContentDocumentLink> links = [
-            SELECT ContentDocumentId
-            FROM ContentDocumentLink
-            WHERE LinkedEntityId = :recordId
-            LIMIT 1
-        ];
+    private static PdfData renderQuotePdfData(Id quoteId) {
+        PageReference pdfPage = Page.QuotePDF;
+        pdfPage.getParameters().put('id', String.valueOf(quoteId));
         
-        if (links.isEmpty()) {
-            throw new AuraHandledException('No PDF file found attached to this record');
-        }
+        Blob pdfBlob = pdfPage.getContentAsPDF();
         
-        List<ContentVersion> contentVersions = [
-            SELECT Title, VersionData, FileExtension, ContentSize
-            FROM ContentVersion
-            WHERE ContentDocumentId = :links[0].ContentDocumentId
-            AND IsLatest = true
-            LIMIT 1
-        ];
-        
-        if (contentVersions.isEmpty()) {
-            throw new AuraHandledException('No valid content version found');
-        }
-        
-        return contentVersions[0];
+        return new PdfData(pdfBlob, 'Quote.pdf');
     }
     
+    private static PdfData renderOrderPdfData(Id orderId) {
+        PageReference pdfPage = Page.SalesOrderPDF; 
+        pdfPage.getParameters().put('id', String.valueOf(orderId));
+
+        Blob pdfBlob = pdfPage.getContentAsPDF();
+
+        return new PdfData(pdfBlob, 'Order.pdf');
+    }
+
     private static Map<String, Object> buildRequestPayload(String recipientName, String recipientEmail, String requestName) {
         Map<String, Object> action = new Map<String, Object>{
             'recipient_email' => recipientEmail,
@@ -123,11 +136,11 @@ public with sharing class ZohoSignService {
         return new Map<String, Object>{ 'requests' => request };
     }
     
-    private static HttpResponse sendZohoCreateRequest(ContentVersion cv, Map<String, Object> payload) {
+    private static HttpResponse sendZohoCreateRequest(PdfData pdfData, Map<String, Object> payload) {
         String boundary = '----boundary_' + String.valueOf(Crypto.getRandomInteger());
         String jsonPayload = JSON.serialize(payload);
         
-        Blob requestBody = buildMultipartBody(cv, jsonPayload, boundary);
+        Blob requestBody = buildMultipartBody(pdfData, jsonPayload, boundary);
         
         HttpRequest req = new HttpRequest();
         req.setEndpoint('callout:Zoho/api/v1/requests');
@@ -147,7 +160,7 @@ public with sharing class ZohoSignService {
         return response;
     }
     
-    private static Blob buildMultipartBody(ContentVersion cv, String jsonPayload, String boundary) {
+    private static Blob buildMultipartBody(PdfData pdfData, String jsonPayload, String boundary) {
         String lineEnd = '\r\n';
         
         String bodyHeader = 
@@ -157,14 +170,14 @@ public with sharing class ZohoSignService {
             jsonPayload + lineEnd +
             '--' + boundary + lineEnd +
             'Content-Disposition: form-data; name="file"; filename="' + 
-            cv.Title + '.' + cv.FileExtension + '"' + lineEnd +
+            pdfData.fileName + '"' + lineEnd +
             'Content-Type: application/pdf' + lineEnd + lineEnd;
         
         String bodyFooter = lineEnd + '--' + boundary + '--';
         
         String combinedDataAsHex = 
             EncodingUtil.convertToHex(Blob.valueOf(bodyHeader)) + 
-            EncodingUtil.convertToHex(cv.VersionData) + 
+            EncodingUtil.convertToHex(pdfData.pdfBlob) + 
             EncodingUtil.convertToHex(Blob.valueOf(bodyFooter));
         
         return EncodingUtil.convertFromHex(combinedDataAsHex);
@@ -312,10 +325,8 @@ public with sharing class ZohoSignService {
             fieldsToUpdate.put(signatureRequest.statusFieldName, signatureRequest.statusValue);
             fieldsToUpdate.put(signatureRequest.requestIdFieldName, requestId);
             
-            if (sObjectType == 'Quote') {
+            if (sObjectType == 'Quote' || sObjectType == 'Order') {
                 fieldsToUpdate.put('Decline_Reason__c', '');
-            } else if (sObjectType == 'Order') {
-                
             }
             
             SObject recordToUpdate = Schema.getGlobalDescribe().get(sObjectType).newSObject();
