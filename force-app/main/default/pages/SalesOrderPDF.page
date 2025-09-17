@@ -11,23 +11,16 @@
                     content: element(header);
                 }
             }
-            
-            div.header {
-                position: running(header);
-                text-align: center;
-                margin-top: 48px;
-            }
-            
-            div.footer {
-                position: running(footer);
-            }
-            
+                        
             body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 10pt;
             color: #000;
             line-height: 1.2;
             }
+
+            .header { position: running(header); text-align: center; margin-bottom: 5px; }
+            .footer { position: running(footer); font-size: 9pt; text-align: center; margin-top: 20px; }
             
             .order-title {
                 float: right;
@@ -303,7 +296,7 @@
                 <td class="left">
                     <h3>Floorworld LLC</h3>
                     <div>DXB-Head Office</div>
-                    <div>DIP 2 Plot 597-733, Dubai Investment Park 2, Dubai</div>
+                    <div>DIP 2 Plot 597-</div>
                     <div>04 889 5661</div>
                     <br/>
                     <div>TRN: 100051766200003</div>
@@ -326,7 +319,7 @@
                 </td>
                 
                 <td class="right">
-                    <div class="customer-row"><b>Customer:</b><span class="header-table-margin">{!order.Account.AccountNumber} {!order.Account.Name}</span></div>
+                    <div class="customer-row"><b>Customer:</b><span class="header-table-margin">{!order.Account.Name}</span></div>
                     <div class="customer-row"><b>Contact Name:</b><span class="header-table-margin">{!order.Account.Name}</span></div>
                     <div class="customer-row"><b>Phone No.:</b><span class="header-table-margin">{!order.Account.Phone}</span></div>
                     <div class="customer-row"><b>Mobile No.:</b><span class="header-table-margin">{!order.Account.Phone}</span></div>
@@ -459,7 +452,7 @@
                 <table class="tax-summary-table">
                     <thead>
                         <tr>
-                            <th width="40%">Payment Name</th>
+                            <th width="40%">Payment #</th>
                             <th width="30%">Payment Date</th>
                             <th width="30%">Amount</th>
                         </tr>
@@ -476,6 +469,11 @@
                                 <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!payment.Amount__c}"/></apex:outputText></td>
                             </tr>
                         </apex:repeat>
+                        <tr style="font-weight: bold; background-color: #e3e3e3;">
+                            <td colspan="2">Total Amount Paid</td>
+                            <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Total_Amount_Paid__c}"/></apex:outputText></td>
+                        </tr>
+                        <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
                         <tr style="font-weight: bold; background-color: #e3e3e3;">
                             <td colspan="2">Balance Due</td>
                             <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Balance_Due__c}"/></apex:outputText></td>

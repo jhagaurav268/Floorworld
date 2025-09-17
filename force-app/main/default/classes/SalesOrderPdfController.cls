@@ -21,7 +21,7 @@ public with sharing class SalesOrderPdfController {
     private void loadOrderData(String orderId) {
         try {
             order = [SELECT Id, Name, OrderNumber, CreatedDate, Opportunity.Name, Sales_Rep__r.Name, Discounted_Amount__c,
-                     Total_Price__c, VAT__c, Tax_Amount__c, Grand_Total__c, Account.Phone, Branch__r.Name, Payment_Terms__c,
+                     Total_Price__c, VAT__c, Tax_Amount__c, Grand_Total__c, Account.Phone, Branch__r.Name, Payment_Terms__c, Total_Amount_Paid__c,
                      Account.ShippingAddress, Account.ShippingStreet, Account.ShippingCity, Discount__c, Good_Available__c, CurrencyIsoCode,
                      Supply_Type__c, Shipping_Method__c, Account.ShippingState, Quote.Email, Branch__r.Branch_Phone__c, Balance_Due__c,
                      Owner.Name, Account.BillingStreet, Account.BillingCity, Account.ShippingCountry, Account.ShippingPostalCode,

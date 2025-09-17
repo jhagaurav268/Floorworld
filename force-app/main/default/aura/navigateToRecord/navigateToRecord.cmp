@@ -1,0 +1,5 @@
+<aura:component implements="lightning:availableForFlowActions" 
+                description="Navigate to record with clean URL">
+    <aura:attribute name="recordId" type="String" />
+    <lightning:navigation aura:id="navService" />
+</aura:component>

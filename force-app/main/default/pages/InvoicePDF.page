@@ -15,7 +15,7 @@
             line-height: 1.3;
             }
             
-            .header { position: running(header); text-align: center; margin-top: 40px; }
+            .header { position: running(header); text-align: center; margin-bottom: 5px; }
             .footer { position: running(footer); font-size: 9pt; text-align: center; margin-top: 20px; }
             
             .logo { float: right; text-align: right; }
@@ -34,25 +34,25 @@
             font-size: 14pt;
             font-weight: bold;
             color: #333;
-            background-color: #e8e8e8;
-            border: 1px solid #333;
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
             }
             .items-table tfoot td {
-            background-color: #d0d0d0;
+            background-color: #f2f2f2;
             text-align: center;
             padding: 8px;
             font-size: 11pt;
             font-weight: bold;
-            border: 1px solid #333;
+            border: 1px solid #ccc;
             }
             .items-table th, .items-table td {
-            border: 1px solid #000;
+            border: 1px solid #ccc;
             padding: 6px 4px;
             text-align: center;
             vertical-align: middle;
             }
             .items-table th {
-            background: #e3e3e3;
+            background: #f2f2f2;
             font-weight: bold;
             }
             
@@ -83,6 +83,47 @@
             color: #fff;
             font-weight: bold;
             }
+            .other-instruction {
+                border: 2px dotted #000;
+                padding: 15px;
+                margin: 20px 0;
+            }
+            
+            .instruction-title {
+                text-align: center;
+                margin-bottom: 15px;
+            }
+            
+            .instruction-title .english-text {
+                font-size: 14pt;
+                font-weight: bold;
+            }
+            
+            .instruction-content {
+                font-size: 10pt;
+                line-height: 1.4;
+                text-align: justify;
+            }
+            .terms-section {
+                margin-top: 20px;
+                font-size: 9pt;
+                border-collapse: collapse;
+                width: 100%;
+            }
+            
+            .terms-section th {
+                background: #f2f2f2;
+                text-align: center;
+                padding: 8px;
+                border: 1px solid #000;
+                font-weight: bold;
+            }
+            
+            .terms-section td {
+                padding: 6px;
+                border: 1px solid #000;
+                vertical-align: top;
+            }
         </style>
     </head>
     
@@ -106,28 +147,38 @@
             <tr>
                 <td style="width:50%; vertical-align:top;">
                     <table style="width:100%; border-collapse:collapse; border:1px solid #ccc;">
-                        <tr><td style="width:40%; background:#e6e6e6; padding:6px;">Sales Order date</td><td style="padding:6px; background:#FDF7FA">{!TEXT(order.CreatedDate)}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Deal Name</td><td style="padding:6px; background:#FDF7FA">{!order.Opportunity.Name}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">LPO Ref #</td><td style="padding:6px; background:#FDF7FA">12345</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Sales Person</td><td style="padding:6px; background:#FDF7FA">{!order.Sales_Rep__r.Name}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Account Name</td><td style="padding:6px; background:#FDF7FA">{!order.Account.Name}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Billing Address</td><td style="padding:6px; background:#FDF7FA">{!order.Account.BillingStreet}, {!order.Account.BillingCity}, {!order.Account.BillingState}, {!order.Account.BillingCountry}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Account VAT #</td><td style="padding:6px; background:#FDF7FA">104157987900003</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Account Ref #</td><td style="padding:6px; background:#FDF7FA">ACCN146111</td></tr>
+                        <tr><td><h3>Floorworld LLC</h3></td></tr>
+                        <!-- <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr> -->
+                        <tr><td style="margin-top: 2px">DXB-Head Office</td></tr>
+                        <tr><td>DIP 2 Plot 597-733, Dubai Investment Park 2, Dubai</td></tr>
+                        <tr><td>04 889 5661</td></tr>
+                        <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
+                        <tr><td>TRN: 100051766200003</td></tr>
+                        <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
+                        
+                        <tr><td><h3>Bill To</h3></td></tr>
+                        <!-- <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr> -->
+                        <tr><td style="margin-top: 2px">{!order.Account.BillingStreet}</td></tr>
+                        <tr><td>{!order.Account.BillingCity}</td></tr>
+                        <tr><td>{!order.Account.BillingState}</td></tr>
+                        <tr><td>{!order.Account.BillingCountry}</td></tr>
+                        <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
+                        <tr><td>TRN: 100051766200003</td></tr>
                     </table>
                 </td>
                 
                 <td style="width:50%; vertical-align:top;">
                     <table style="width:100%; border-collapse:collapse; border:1px solid #ccc;">
-                        <tr><td style="width:40%; background:#e6e6e6; padding:6px;">VAT Registration No.</td><td style="padding:6px; background:#FDF7FA">100051766200003</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Branch</td><td style="padding:6px; background:#FDF7FA">{!order.Branch__r.Name}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Delivery Address</td><td style="padding:6px; background:#FDF7FA">{!order.Account.ShippingStreet}, {!order.Account.ShippingCity}, {!order.Account.ShippingState}, {!order.Account.ShippingCountry}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Contact Name</td><td style="padding:6px; background:#FDF7FA">{!order.Contact__r.Name}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Phone</td><td style="padding:6px; background:#FDF7FA">{!order.Contact__r.Phone}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Mobile</td><td style="padding:6px; background:#FDF7FA">{!order.Contact__r.MobilePhone}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Email</td><td style="padding:6px; background:#FDF7FA">{!order.Contact__r.Email}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Branch Address</td><td style="padding:6px; background:#FDF7FA">{!order.Branch__r.Branch_Address__c}</td></tr>
-                        <tr><td style="background:#e6e6e6; padding:6px;">Branch Phone</td><td style="padding:6px; background:#FDF7FA">{!order.Branch__r.Branch_Phone__c}</td></tr>
+                        <tr><td style="background:#f2f2f2; padding:6px;">Sales Person</td><td style="padding:6px; background:#fafafa">{!order.Sales_Rep__r.Name}</td></tr>
+                        <tr><td style="background:#f2f2f2; padding:6px;">Deal Name</td><td style="padding:6px; background:#fafafa">{!order.Opportunity.Name}</td></tr>
+                        <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
+                        <tr><td style="background:#f2f2f2; padding:6px;">Customer</td><td style="padding:6px; background:#fafafa">{!order.Contact__r.Name}</td></tr>
+                        <tr><td style="background:#f2f2f2; padding:6px;">Contact Name</td><td style="padding:6px; background:#fafafa">{!order.Contact__r.Name}</td></tr>
+                        <tr><td style="background:#f2f2f2; padding:6px;">Phone</td><td style="padding:6px; background:#fafafa">{!order.Contact__r.Phone}</td></tr>
+                        <tr><td style="background:#f2f2f2; padding:6px;">Mobile</td><td style="padding:6px; background:#fafafa">{!order.Contact__r.MobilePhone}</td></tr>
+                        <tr><td style="background:#f2f2f2; padding:6px;">Email</td><td style="padding:6px; background:#fafafa">{!order.Contact__r.Email}</td></tr>
+                        <tr><td style="background:#f2f2f2; padding:6px;">Delivery Address</td><td style="padding:6px; background:#fafafa">{!order.Account.ShippingStreet}, {!order.Account.ShippingCity}, {!order.Account.ShippingState},
+                        {!order.Account.ShippingCountry}</td></tr>
                     </table>
                 </td>
             </tr>
@@ -151,7 +202,7 @@
                     <apex:repeat value="{!orderProducts}" var="item">
                         <tr>
                             <td>{!item.Location__c}</td>
-                            <td>{!item.Product2.Name} {!item.Description}</td>
+                            <td style="text-align: left">{!item.Product2.ProductCode} - {!item.Description}</td>
                             <td>{!item.Product2.Box_s_Per_Pallet__c}</td>
                             <td>{!item.Quantity}</td>
                             <td>{!item.Net_Area_Sqm_Lm__c}</td>
@@ -170,21 +221,20 @@
                 </tfoot>
             </table>
         </div>
+
+        <div style="padding: 10px; font-size: 11pt;">
+            <strong>Payment Terms:</strong> {!order.Payment_Terms__c}
+        </div>
+
         <div class="invoice-container">
             <table style="width:100%; border-collapse:collapse;">
                 <tr>
                     <td style="width:55%; vertical-align:top; padding-right:10px;">
                         <table class="mytable">
-                            <tr><td class="label">Total SQM</td><td class="value">{!totalSQM}</td></tr>
-                            <tr><td class="label">Total LM</td><td class="value">{!totalLM}</td></tr>
-                            <tr><td class="label">Total PCS</td><td class="value">{!totalPCS}</td></tr>
-                            <tr><td class="label">Supply Type</td><td class="value">{!order.Supply_Type__c}</td></tr>
-                            <tr><td class="label">Goods Available</td><td class="value">{!order.Good_Available__c}</td></tr>
-                            <tr><td class="label">Shipping Method</td><td class="value">{!order.Shipping_Method__c}</td></tr>
-                            <tr><td class="label">Payment Terms</td><td class="value">{!order.Payment_Terms__c}</td></tr>
-                            <tr><td class="label">Total Box</td><td class="value">{!totalBox}</td></tr>
-                            <tr><td class="label">Total Pallets</td><td class="value">{!totalPallets}</td></tr>
-                            <tr><td class="label">Total Weight (Kg)</td><td class="value">{!totalWeight}</td></tr>
+                            <tr><td class="label">Bank</td><td class="value">Emirates NBD</td></tr>
+                            <tr><td class="label">IBAN</td><td class="value">AE960260001014436622301</td></tr>
+                            <tr><td class="label">Account No</td><td class="value">1014436622301</td></tr>
+                            <tr><td class="label">Swift Code</td><td class="value">EBILAEAD</td></tr>
                         </table>
                     </td>
                     
@@ -209,79 +259,166 @@
                 </tr>
             </table>
         </div>
-        <div class="extra-section">
             
-            <!-- Top Row: Instructions + Bank Details -->
-            <table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:10pt;">
-                <tr>
-                    <!-- Other Instructions -->
-                    <td style="width:60%; vertical-align:top; border:1px solid #000;">
-                        <div style="background:#f2f2f2; font-weight:bold; padding:4px;">Other Instructions:</div>
-                        <div style="height:40px; padding:4px;"></div>
-                    </td>
-                    
-                    <!-- Bank Details -->
-                    <td style="width:40%; vertical-align:top; padding-left:50px">
-                        <table style="width:100%; border-collapse:collapse; font-size:10pt;">
-                            <tr>
-                                <td colspan="2" style="border:1px solid #000; background:#e6e6eb; font-weight:bold; text-align:center; padding:4px;">
-                                    Payment Instructions:
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; width:40%; padding:4px;">Bank:</td>
-                                <td style="border:1px solid #000; padding:4px;">Emirates NBD</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; width:40%; padding:4px;">IBAN:</td>
-                                <td style="border:1px solid #000; padding:4px;">AE960260001014436622301</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; padding:4px;">Account No:</td>
-                                <td style="border:1px solid #000; padding:4px;">1014436622301</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; padding:4px;">Swift Code:</td>
-                                <td style="border:1px solid #000; padding:4px;">EBILAEAD</td>
-                            </tr>
-                        </table>
-                    </td>
-                    
-                </tr>
-            </table>
-            
-            <!-- Approved / Prepared By -->
-            <table style="width:100%; margin-top:40px; font-size:10pt; text-align:center;">
-                <tr>
-                    <td style="width:50%;">____________________<br/>Approved By:</td>
-                    <td style="width:50%;">____________________<br/>Prepared By:</td>
-                </tr>
-            </table>
-            
-            <!-- Notes -->
-            <div style="margin-top:20px; font-size:9pt; line-height:1.4;">
-                <strong>Notes:</strong><br/>
-                If there is anything which you are unsure of with the terms &amp; conditions, 
-                please request clarification from the sales person or email at info@floorworld.com.<br/>
-                I, _____, hereby agree to FLOORWORLD terms &amp; conditions attached to this Order.
+        <div class="other-instruction">
+            <div class="instruction-title">
+                <div class="english-text">Other Instruction</div>
             </div>
-            
-            <!-- Signature & Company -->
-            <div style="margin-top:20px; font-size:10pt;">
-                Signed: Location ________________ &nbsp;&nbsp; Date: ________ <br/><br/>
-                Company: _____
+            <div class="instruction-content">
+                
             </div>
-            
-            <!-- Company Stamp -->
-            <table style="width:100%; margin-top:30px; font-size:10pt;">
+        </div>
+        
+        <!-- <table style="width:100%; margin-top:40px; font-size:10pt; text-align:center;">
+            <tr>
+                <td style="width:50%;">____________________<br/>Approved By:</td>
+                <td style="width:50%;">____________________<br/>Prepared By:</td>
+            </tr>
+        </table>
+        
+        <div style="margin-top:20px; font-size:9pt; line-height:1.4;">
+            <strong>Notes:</strong><br/>
+            If there is anything which you are unsure of with the terms &amp; conditions, 
+            please request clarification from the sales person or email at info@floorworld.com.<br/>
+            I, _____, hereby agree to FLOORWORLD terms &amp; conditions attached to this Order.
+        </div>
+        
+        <div style="margin-top:20px; font-size:10pt;">
+            Signed: Location ________________ &nbsp;&nbsp; Date: ________ <br/><br/>
+            Company: _____
+        </div>
+        
+        <table style="width:100%; margin-top:30px; font-size:10pt;">
+            <tr>
+                <td style="width:60%;"></td>
+                <td style="width:40%; border:1px solid #000; text-align:center; padding:20px;">
+                    Company Stamp
+                </td>
+            </tr>
+        </table> -->
+        <div>
+            <table class="terms-section">
                 <tr>
-                    <td style="width:60%;"></td>
-                    <td style="width:40%; border:1px solid #000; text-align:center; padding:20px;">
-                        Company Stamp
+                    <th width="5%"></th>
+                    <td>
+                        <strong>Proforma Invoice Terms and Conditions</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <th width="5%">1</th>
+                    <td>
+                        <p><strong>Cancellations</strong> - We will consider, but not be bound to accept, any request for cancellation of an order, and acceptance shall be on such terms as may be agreed by us in writing. We reserve the right to levy an administration charge (minimum 25%) together with any manufacturing costs incurred whilst processing an order. No requests for cancellation will be considered for all Engineers' wood flooring, wood accessories or where it is a custom design, has been specially purchased locally or internationally as a non-stock item. No requests for cancellation will be considered more than 1 month after Sales Order confirmation date.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>2</th>
+                    <td>
+                        <p><strong>Returns</strong> - We do not normally accept the return of perfect goods if correctly supplied as ordered. We therefore strongly recommend that customers check quantity, colour and product requirements carefully before ordering. If goods are accepted for return at the company's discretion, we reserve the right to levy an administration charge (minimum 25%) together with carriage.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>3</th>
+                    <td>
+                        <p><strong>Storage and Delivery</strong> - Delivery as mentioned in the shipment method will only commence when received cash or cleared funds in our bank account. This will exclude Saturdays and Sundays and placed the next working day that follows.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>3.A</th>
+                    <td>
+                        <p><strong></strong> We reserve the right to charge a storage fee of 500 Dhs/month for goods held in our warehouse for a period over one (1) month. This will commence on or after 30 days from date of Sales Order confirmation or 30days from the no. of days/weeks given in the shipment method.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>4</th>
+                    <td>
+                        <p><strong>Collections</strong> - Arrangements can be made for collection from our premises by advance notice and agreement. Usually Monday to Friday (8 a.m. to 5 p.m.) excluding public holidays. We kindly request customers, however, to make such arrangements well in advance of intended collection of goods required. We regret that we cannot accept any claims whatsoever in such cases, if goods are unavailable at the time of collection. All promises of stock availability are given in good faith, but should not be regarded as guaranteed correct.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>5</th>
+                    <td>
+                        <p><strong>Settlement</strong> - Cleared funds are required from non-credit account customers before goods can be released from our warehouse. Prepayment may be made by cleared cheque from a recognized U.A.E bank, cash, credit card or direct bank transfer. Note: This must be a minimum of 3 days prior to the agreed delivery date or on collection from our warehouse.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th width="5%">6</th>
+                    <td>
+                        <p><strong>Acclimatization</strong> - A maintained ambient room temperature of between 18-26 degrees celsius is required prior to, during and after installation. Relative humidity levels between 30 - 60% also need to be present. All flooring products require 24 hours acclimatization with temperatures to remain between 18 - 26 degrees Celsius, relative humidity levels between 30 - 60% also need to be present. Failure to maintain these conditions may result in damaging the installed goods and null and void your warranty.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7</th>
+                    <td>
+                        <p><strong>Installations</strong> - Floorworld will make every effort to start and complete each installation within the estimated time frame, due to the nature of the work installation times may overrun due to various factors that may be out of the control of Floorworld. The company reserves the right to alter both start and completions dates due to operational or exceptional circumstances, this sales order does not constitute a written contract relating to the schedule or duration of the installation process.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.A</th>
+                    <td>
+                        <p><strong></strong> Rooms must be empty and clean and all existing floor coverings removed. If Floorworld LLC are required to remove any furniture and/ or existing floor coverings then an additional charges will be levied. This charge will be agreed prior to any commencement of work. All furniture such as cabinets and wardrobes must be emptied by the client prior to work commence to avoid damage to the contents. Floorworld LLC will not accept responsibility for any damage caused in moving furniture/appliances.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.B</th>
+                    <td>
+                        <p><strong></strong> Doors will only be removed and re-hung where there is no alteration to the floor height. If doors require re-fitting, an additional charge of AED 100.00 per door will be levied.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.C</th>
+                    <td>
+                        <p><strong></strong> Those responsible for the design and construction of the sub floor should ensure that it meets the requirements for hardness, levels and surface regularities (BS 8204-1:2003+Amendment 1:2009), dryness and other design parameters. On inspection, prior to commencement, if a subfloor is found to be unsuitable, rectification work must be carried out - additional work required will incur an additional charge. Where the subfloor is not sufficiently dry, an Epoxy Damp Proof Membrane (or any other specified) may be recommended prior to installation of the flooring - at an additional cost. If any recommendation is not implemented, then Floorworld LLC will not offer any guarantee for the installation of the flooring. For each flooring installation that Floorworld undertakes, Floorworld will conduct all necessary moisture tests to the walls and subfloor to ensure suitability, if moisture readings above 10% are present then remedial work will be needed at extra cost prior to the installation commencing. Once all flooring, skirting and profiles have been installed it is the responsibility of the client/homeowner to ensure the property is adequately protected against the manifestation of moisture or mould within the walls and subfloor. The failure of skirting, profiles or flooring due to damage from moisture or mould after installation will not be covered under any product warranty if moisture readings of higher than 10% are found to be present.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.D</th>
+                    <td>
+                        <p><strong></strong> Adequate lighting is required and should be supplied by the client to ensure accurate cutting and laying of flooring materials.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.E</th>
+                    <td>
+                    <p><strong></strong> Electricity supply is required and should be supplied by the client.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.F</th>
+                    <td>
+                        <p><strong></strong> The client must provide Water supply in order to mix certain products. This is particularly relevant for preparation and levelling work.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.G</th>
+                    <td>
+                        <p><strong></strong> Bathroom and toilet areas should have the bath panel, sink pedestal, toilet and any other standing units removed (prior to commencement of works) to enable a correctly finished floor. Floorworld LLC are not authorized or qualified to disconnect or re-connect any type of appliances. Kitchen areas should have (prior to commencement of works) the plinths removed from the units and, where floors are to be taken under electrical appliances, e.g. Fridges, freezers, tumble dryers, dish washers, washing machines etc., it is the clients responsibility to ensure they have been removed safely and all plumbing and wiring has been disconnected.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.H</th>
+                    <td>
+                        <p><strong></strong> With every installation the flooring planks will be installed in a completely random configuration, should you wish the floor to be installed in any other configuration such as brick bond then this must be highlighted to the Sales Person at the point of order to ensure extra wastage has been added to the final quantity to achieve the desired effect.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>7.I</th>
+                    <td>
+                    <p><strong></strong> It is the client/homeowners responsibility to ensure the property is protected against termites or wood boring insects, such manifestations and subsequent damage thereby caused are not covered under any product warranty.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>8</th>
+                    <td>
+                    <p><strong>Protection</strong> - Protection of the installed floor will be the responsibility of the client/main contractor. Floorworld LLC will not be responsible for damage incurred by the client or other trades after installation is completed. All types of flooring must be protected from receiving surface scratches while moving furniture, all furniture legs should have self-adhesive felt pads or similar attached to prevent surface scratches from taking place, if such scratches do occur they not be deemed as a product fault and will not be covered under warranty from either Floorworld or the manufacturer.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>9</th>
+                    <td>
+                    <p><strong>Title To Goods</strong> - We reserve the right to retain, if we should so decide, the title to goods supplied under these terms of sale until the purchaser has discharged all sums owing to us. Until such discharge, the purchaser shall hold the goods, whether or not sold to another party upon trust for ourselves and grant us the right, if we so wish, to enter the purchaser's or its agent's premises to recover any such goods. Please note: If you experience any difficulties with, or are unsure of any of the points contained within the Terms and Conditions, please do not hesitate to contact Floorworld LLC by telephone on 04 889 5661 email to sales@floorworld.com</p>
                     </td>
                 </tr>
             </table>
-            
         </div>
     </body>
 </apex:page>

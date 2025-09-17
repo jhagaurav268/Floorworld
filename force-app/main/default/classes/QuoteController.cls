@@ -253,22 +253,31 @@ public class QuoteController {
             
             if (!quoteLineItemsToUpsert.isEmpty()) {
                 Database.upsert(quoteLineItemsToUpsert, true);
-            }
-            
-            
-            if(discountPercent != null && discountPercent > 0 && discountAmount != null && discountAmount > 0){
+
+                AggregateResult agg = [
+                    SELECT SUM(Est_Gross_Profit_Percent__c) sumProfit,
+                        COUNT(Id) cnt
+                    FROM QuoteLineItem
+                    WHERE QuoteId = :quoteId
+                    AND Est_Gross_Profit_Percent__c != NULL
+                ];
+                
+                Decimal totalProfit = (Decimal)agg.get('sumProfit');
+                Decimal totalCount = (Decimal)agg.get('cnt');
+                Decimal avgProfit = (totalCount > 0) ? (totalProfit / totalCount) : null;
+
                 Quote quoteToUpdate = new Quote();
                 quoteToUpdate.Id = quoteId;
-                quoteToUpdate.Discount__c = discountPercent;
-                quoteToUpdate.Discounted_Amount__c = discountAmount; 
-                
-                update quoteToUpdate;
-            } else if (discountPercent == null || discountPercent == 0) {
-                Quote quoteToUpdate = new Quote();
-                quoteToUpdate.Id = quoteId;
-                quoteToUpdate.Discount__c = null;
-                quoteToUpdate.Discounted_Amount__c = null;
-                
+                quoteToUpdate.Profit_Percentage__c = avgProfit;
+
+                if (discountPercent != null && discountPercent > 0 && discountAmount != null && discountAmount > 0) {
+                    quoteToUpdate.Discount__c = discountPercent;
+                    quoteToUpdate.Discounted_Amount__c = discountAmount; 
+                } else {
+                    quoteToUpdate.Discount__c = null;
+                    quoteToUpdate.Discounted_Amount__c = null;
+                }
+
                 update quoteToUpdate;
             }
             
