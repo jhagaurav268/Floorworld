@@ -2,10 +2,14 @@
     <head>
         <style>
             @page {
-            size: A4 portrait;
-            margin: 30mm 10mm 25mm 10mm;
-            @bottom-left { content: element(footer); }
-            @top-center { content: element(header); }
+                size: A4 portrait;
+                margin: 30mm 10mm 25mm 10mm;
+                @top-center {
+                    content: element(header);
+                }
+                @bottom-center {
+                    content: element(footer);
+                }
             }
             
             body {
@@ -17,6 +21,14 @@
             
             .header { position: running(header); text-align: center; margin-bottom: 5px; }
             .footer { position: running(footer); font-size: 9pt; text-align: center; margin-top: 20px; }
+
+            .pagenumber:before {
+            content: counter(page);
+            }
+            
+            .pagecount:before {
+            content: counter(pages);
+            }
             
             .logo { float: right; text-align: right; }
             .order-title { float: left; width: 60%; text-align: left; }
@@ -124,6 +136,20 @@
                 border: 1px solid #000;
                 vertical-align: top;
             }
+
+            .agreement-text {
+                margin-bottom: 40px;
+                font-size: 14px;
+            }
+                        
+            .blank-line {
+                display: inline-block;
+                border-bottom: 1px dashed #000;
+                width: 300px;
+                height: 1px;
+                margin: 0 5px;
+            }
+
         </style>
     </head>
     
@@ -138,9 +164,14 @@
         </div>
         
         <div class="footer">
-            <strong>Floorworld LLC</strong><br/>
-            Floorworld Building, Dubai Investment Park<br/>
-            DIP 2, Dubai Po Box 212349, United Arab Emirates
+            <div class="order-title">
+                <strong>Floorworld LLC</strong><br/>
+                Floorworld Building, Dubai Investment Park<br/>
+                DIP 2, Dubai Po Box 212349, United Arab Emirates
+            </div>
+            <div class="logo">
+                Page <span class="pagenumber"></span> of <span class="pagecount"></span>
+            </div>
         </div>
         
         <table style="width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; margin-top:20px;">
@@ -153,7 +184,7 @@
                         <tr><td>DIP 2 Plot 597-733, Dubai Investment Park 2, Dubai</td></tr>
                         <tr><td>04 889 5661</td></tr>
                         <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
-                        <tr><td>TRN: 100051766200003</td></tr>
+                        <tr><td>TRN: 100056993700003</td></tr>
                         <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
                         
                         <tr><td><h3>Bill To</h3></td></tr>
@@ -163,7 +194,7 @@
                         <tr><td>{!order.Account.BillingState}</td></tr>
                         <tr><td>{!order.Account.BillingCountry}</td></tr>
                         <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
-                        <tr><td>TRN: 100051766200003</td></tr>
+                        <tr><td>TRN: 100056993700003</td></tr>
                     </table>
                 </td>
                 
@@ -188,37 +219,41 @@
             <table class="items-table">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Location</th>
-                        <th>Product Code and Description</th>
+                        <th>Products</th>
+                        <th>Description</th>
                         <th>Pallets</th>
-                        <th>Box/PCS</th>
-                        <th>SQM/LM</th>
-                        <th>Unit</th>
-                        <th>Unit Price</th>
-                        <th>Total Price</th>
+                        <th>QTY(Main)</th>
+                        <th>QTY(Sub)</th>
+                        <th>Unit Rate<br/>(Sub Unit)</th>
+                        <th>Amount</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <apex:variable var="rowNumber" value="{!1}"/>
                     <apex:repeat value="{!orderProducts}" var="item">
                         <tr>
+                            <td>{!rowNumber}</td>
                             <td>{!item.Location__c}</td>
-                            <td style="text-align: left">{!item.Product2.ProductCode} - {!item.Description}</td>
-                            <td>{!item.Product2.Box_s_Per_Pallet__c}</td>
+                            <td style="text-align: left">{!item.Product2.Name}</td>
+                            <td style="text-align: left">{!item.Description}</td>
+                            <td>{!IF(ISBLANK(item.Product2.Box_s_Per_Pallet__c), '', TEXT(item.Product2.Box_s_Per_Pallet__c))}</td>
                             <td>{!item.Quantity}</td>
-                            <td>{!item.Net_Area_Sqm_Lm__c}</td>
-                            <td>{!item.Unit__c}</td>
+                            <td>{!item.Quantity_SQM__c}</td>
                             <td>{!item.UnitPrice}</td>
                             <td>{!item.Gross_Amount__c}</td>
                         </tr>
+                    <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
                     </apex:repeat>
                 </tbody>
-                <tfoot>
+                <!-- <tfoot>
                     <tr>
                         <td colspan="10">
-                            Total Amount - Products (AED) : 11276.07
+                            Total Amount - Products ({!order.CurrencyIsoCode}) : {!order.Total_Price__c}
                         </td>
                     </tr>
-                </tfoot>
+                </tfoot> -->
             </table>
         </div>
 
@@ -231,6 +266,8 @@
                 <tr>
                     <td style="width:55%; vertical-align:top; padding-right:10px;">
                         <table class="mytable">
+                            <tr><td class="label">Total in Words Dirhams</td><td class="value"></td></tr>
+                            <tr><td class="label">Account Name</td><td class="value">Floorworld LLC</td></tr>
                             <tr><td class="label">Bank</td><td class="value">Emirates NBD</td></tr>
                             <tr><td class="label">IBAN</td><td class="value">AE960260001014436622301</td></tr>
                             <tr><td class="label">Account No</td><td class="value">1014436622301</td></tr>
@@ -259,7 +296,7 @@
                 </tr>
             </table>
         </div>
-            
+        <br/><br/>
         <div class="other-instruction">
             <div class="instruction-title">
                 <div class="english-text">Other Instruction</div>
@@ -269,6 +306,11 @@
             </div>
         </div>
         
+        <div class="invoice-container">
+            <div class="agreement-text">
+                I, <span class="blank-line"></span>, hereby agree to the products, specifications, quantity, price and general terms stated above and inclusive of the points listed in "Other Instructions"
+            </div>
+        </div>
         <!-- <table style="width:100%; margin-top:40px; font-size:10pt; text-align:center;">
             <tr>
                 <td style="width:50%;">____________________<br/>Approved By:</td>
@@ -296,7 +338,8 @@
                 </td>
             </tr>
         </table> -->
-        <div>
+
+        <!-- <div>
             <table class="terms-section">
                 <tr>
                     <th width="5%"></th>
@@ -419,6 +462,6 @@
                     </td>
                 </tr>
             </table>
-        </div>
+        </div> -->
     </body>
 </apex:page>

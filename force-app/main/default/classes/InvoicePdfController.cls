@@ -35,7 +35,7 @@ public with sharing class InvoicePdfController {
                      WHERE Id = :proformaInvoice.Order__c 
                      LIMIT 1];
             
-            orderProducts = [SELECT Id, Product2.Name, Product2.ProductCode, Gross_Amount__c,
+            orderProducts = [SELECT Id, Product2.Name, Product2.ProductCode, Gross_Amount__c, Quantity_SQM__c,
                               Description, Quantity, UnitPrice, TotalPrice, Discounted_Price__c,
                               Location__c, Product2.Box_s_Per_Pallet__c, Product2.Weight_Per_Box_PCS_Kg__c,
                               Net_Area_Sqm_Lm__c, Unit__c, Discount__c, Product2.Primary_Consumption_Unit__c
