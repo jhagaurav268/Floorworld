@@ -481,12 +481,12 @@
         <div style="page-break-before: always;">
             <div class="bank-details">
                 <p><strong>Total in Words Dirhams:</strong> </p>
-                <p><strong>Account Name:</strong> FLOORWORLD LLC</p>
                 <p><strong>Bank:</strong> Emirates NBD</p>
                 <p><strong>Account No.:</strong> 1014436622301</p>
                 <p><strong>IBAN No.:</strong> AE960260001014436622301</p>
                 <p><strong>Branch Name:</strong> Emirates Mall Branch</p>
                 <p><strong>Swift Code:</strong> EBILAEAD</p>
+                <p></p>
             </div>
             
             <div class="section-title">Tax Summary</div>
