@@ -291,7 +291,7 @@ public with sharing class ZohoSignService {
             'width' => '20.486986',
             'height' => '2.553444',
             'x_value' => '17.338372',
-            'y_value' => '84.076608',
+            'y_value' => '82.121261',
             'page_no' => pageCount - 3,
             'document_id' => docResponse.documentId
         };
