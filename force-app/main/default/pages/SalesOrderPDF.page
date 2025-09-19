@@ -436,6 +436,44 @@
                 </tr>
             </table>
         </div>
+
+        <div>
+            <div class="section-title">Payment Details</div>
+
+            <apex:outputPanel rendered="{!payments.size > 0}">
+                <table class="tax-summary-table">
+                    <thead>
+                        <tr>
+                            <th width="40%">Payment #</th>
+                            <th width="30%">Payment Date</th>
+                            <th width="30%">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <apex:repeat value="{!payments}" var="payment">
+                            <tr>
+                                <td>{!IF(ISBLANK(payment.Name), 'Payment', payment.Name)}</td>
+                                <td>
+                                    <apex:outputText value="{0,date,M/d/yyyy}">
+                                        <apex:param value="{!payment.Payment_Date__c}"/>
+                                    </apex:outputText>
+                                </td>
+                                <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!payment.Amount__c}"/></apex:outputText></td>
+                            </tr>
+                        </apex:repeat>
+                        <tr style="font-weight: bold; background-color: #e3e3e3;">
+                            <td colspan="2">Total Amount Paid</td>
+                            <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Total_Amount_Paid__c}"/></apex:outputText></td>
+                        </tr>
+                        <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
+                        <tr style="font-weight: bold; background-color: #e3e3e3;">
+                            <td colspan="2">Balance Due</td>
+                            <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Balance_Due__c}"/></apex:outputText></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </apex:outputPanel>
+        </div>
         
         <div class="clear"></div>
         
@@ -472,44 +510,6 @@
                     </tr>
                 </tbody>
             </table>
-
-            <div style="border-bottom: 2px solid #e0e0e0; margin: 20px 0;"></div>
-
-            <div class="section-title">Payment Details</div>
-
-            <apex:outputPanel rendered="{!payments.size > 0}">
-                <table class="tax-summary-table">
-                    <thead>
-                        <tr>
-                            <th width="40%">Payment #</th>
-                            <th width="30%">Payment Date</th>
-                            <th width="30%">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <apex:repeat value="{!payments}" var="payment">
-                            <tr>
-                                <td>{!IF(ISBLANK(payment.Name), 'Payment', payment.Name)}</td>
-                                <td>
-                                    <apex:outputText value="{0,date,M/d/yyyy}">
-                                        <apex:param value="{!payment.Payment_Date__c}"/>
-                                    </apex:outputText>
-                                </td>
-                                <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!payment.Amount__c}"/></apex:outputText></td>
-                            </tr>
-                        </apex:repeat>
-                        <tr style="font-weight: bold; background-color: #e3e3e3;">
-                            <td colspan="2">Total Amount Paid</td>
-                            <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Total_Amount_Paid__c}"/></apex:outputText></td>
-                        </tr>
-                        <tr><td colspan="2" style="height:10px; border:none; background:none;"></td></tr>
-                        <tr style="font-weight: bold; background-color: #e3e3e3;">
-                            <td colspan="2">Balance Due</td>
-                            <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Balance_Due__c}"/></apex:outputText></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </apex:outputPanel>
 
             <apex:outputPanel rendered="{!payments.size == 0}">
                 <table class="tax-summary-table">
@@ -560,7 +560,12 @@
                     <div class="english-text">Other Instruction</div>
                 </div>
                 <div class="instruction-content">
-                    
+                    <ol>
+                        <li>Sub floor condition and level needs to be check after removal of existing skirting.</li>
+                        <li>Any superficial damage to wall following the removal of existing skirting will not be responsibility of Floorworld.</li>
+                        <li>Any additional material or works required will be charged separately.</li>
+                        <li>No Skirting in the staircase. Existing marble skirting will not be removed.</li>
+                    </ol>
                 </div>
             </div>
 
