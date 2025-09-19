@@ -4,11 +4,11 @@
             @page {
                 size: A4 portrait;
                 margin: 30mm 10mm 25mm 10mm;
-                @bottom-left {
-                    content: element(footer);
-                }
                 @top-center {
                     content: element(header);
+                }
+                @bottom-center {
+                    content: element(footer);
                 }
             }
                         
@@ -21,6 +21,14 @@
 
             .header { position: running(header); text-align: center; margin-bottom: 5px; }
             .footer { position: running(footer); font-size: 9pt; text-align: center; margin-top: 20px; }
+
+            .pagenumber:before {
+            content: counter(page);
+            }
+            
+            .pagecount:before {
+            content: counter(pages);
+            }
             
             .order-title {
                 float: right;
@@ -36,6 +44,7 @@
             
             .logo {
                 float: left;
+                text-align: left;
             }
             
             .order-number {
@@ -248,7 +257,7 @@
             }
             
             .terms-section {
-                margin-top: 20px;
+                /* margin-top: 20px; */
                 font-size: 9pt;
                 border-collapse: collapse;
                 width: 100%;
@@ -267,6 +276,19 @@
                 border: 1px solid #000;
                 vertical-align: top;
             }
+
+            .agreement-text {
+                margin-bottom: 40px;
+                font-size: 14px;
+            }
+                        
+            .blank-line {
+                display: inline-block;
+                border-bottom: 1px dashed #000;
+                width: 300px;
+                height: 1px;
+                margin: 0 5px;
+            }
         </style>
     </head>
     
@@ -277,18 +299,23 @@
             </div>
             <div class="order-title">
                 <h2>Sales Order</h2>
-                <div class="order-number">#{!order.orderNumber}</div>
+                <div class="order-number">{!orderNumberPlain}</div>
                 <div class="order-date">Date: <apex:outputText value="{0,date,M/d/yyyy}"><apex:param value="{!order.CreatedDate}"/></apex:outputText></div>
             </div>
             <div class="clear"></div>
         </div>
         
         <div class="footer">
-            <div>
-                <strong>Floorworld LLC</strong><br/>
-                Floorworld Building, Dubai Investment Park<br/>
-                DIP 2, Dubai Po Box 212349, United Arab Emirates
-            </div>
+            <!-- <div style="width:100%; display:flex; justify-content:space-between; font-size:9pt;"> -->
+                <div class="logo">
+                    <strong>Floorworld LLC</strong><br/>
+                    Floorworld Building, Dubai Investment Park<br/>
+                    DIP 2, Dubai Po Box 212349, United Arab Emirates
+                </div>
+                <div class="order-title">
+                    Page <span class="pagenumber"></span> of <span class="pagecount"></span>
+                </div>
+            <!-- </div> -->
         </div>
 
         <table class="header-table">
@@ -299,7 +326,7 @@
                     <div>DIP 2 Plot 597-</div>
                     <div>04 889 5661</div>
                     <br/>
-                    <div>TRN: 100051766200003</div>
+                    <div>TRN: 100056993700003</div>
                 </td>
                 
                 <td class="right">
@@ -315,7 +342,7 @@
                     <div>{!order.Account.BillingCity} {!order.Account.BillingState}</div>
                     <div>{!order.Account.BillingCountry}</div>
                     <br/>
-                    <div>TRN: 100051766200003</div>
+                    <div>TRN: 100056993700003</div>
                 </td>
                 
                 <td class="right">
@@ -356,7 +383,7 @@
                         <td><apex:outputText value="{0,number,#,##0}"><apex:param value="{!item.Quantity}"/></apex:outputText></td>
                         <td><apex:outputText value="{0,number,#,##0.###}"><apex:param value="{!item.Quantity_SQM__c}"/></apex:outputText> SqM</td>
                         <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
-                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.TotalPrice}"/></apex:outputText></td>
+                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.Gross_Amount__c}"/></apex:outputText></td>
                     </tr>
                     <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
                 </apex:repeat>
@@ -382,7 +409,7 @@
                             </tr>
                             <tr>
                                 <td><strong>Total Taxable Amount</strong></td>
-                                <td>{!order.CurrencyIsoCode} {!order.Total_Price__c}</td>
+                                <td>{!order.CurrencyIsoCode} {!order.Total_Taxable_Amount__c}</td>
                             </tr>
                             <tr>
                                 <td class="label"><strong>Tax %</strong></td>
@@ -413,12 +440,13 @@
         
         <div style="page-break-before: always;">
             <div class="bank-details">
-                <p><strong>Account Name:</strong> FLOORWORLD LLC</p>
+                <p><strong>Total in Words Dirhams:</strong> </p>
                 <p><strong>Bank:</strong> Emirates NBD</p>
                 <p><strong>Account No.:</strong> 1014436622301</p>
                 <p><strong>IBAN No.:</strong> AE960260001014436622301</p>
                 <p><strong>Branch Name:</strong> Emirates Mall Branch</p>
                 <p><strong>Swift Code:</strong> EBILAEAD</p>
+                <p></p>
             </div>
             
             <div class="section-title">Tax Summary</div>
@@ -534,8 +562,45 @@
                     
                 </div>
             </div>
+
+            <div class="order-container">
+                <div class="agreement-text">
+                    I, <span class="blank-line"></span>, hereby agree to the products, specifications, quantity, price and general terms stated above and inclusive of the points listed in "Other Instructions"
+                </div>
+
+                <table style="width:100%; border-collapse:collapse;">
+                    <tr>
+                        <td style="width:45%; vertical-align:top; padding-left:10px;">
+                            <table class="mytable">
+                                <tr>
+                                    <td class="label"><strong>Name</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="label"><strong>Signature</strong></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="width:55%; vertical-align:top; padding-right:10px;">
+                            <table class="mytable">
+                                <tr class="grand-total">
+                                    <td><strong>Title</strong></td>
+                                    <td><span class="blank-line"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Designation</strong></td>
+                                    <td><span class="blank-line"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Stamp</strong></td>
+                                    <td><span class="blank-line"></span></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
             
-            <div>
+            <div style="page-break-before: always;">
                 <table class="terms-section">
                     <tr>
                         <th width="5%"></th>
@@ -655,6 +720,39 @@
                         <th>9</th>
                         <td>
                         <p><strong>Title To Goods</strong> - We reserve the right to retain, if we should so decide, the title to goods supplied under these terms of sale until the purchaser has discharged all sums owing to us. Until such discharge, the purchaser shall hold the goods, whether or not sold to another party upon trust for ourselves and grant us the right, if we so wish, to enter the purchaser's or its agent's premises to recover any such goods. Please note: If you experience any difficulties with, or are unsure of any of the points contained within the Terms and Conditions, please do not hesitate to contact Floorworld LLC by telephone on 04 889 5661 email to sales@floorworld.com</p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="order-container" style="margin-top: 30px;">
+                <div class="agreement-text">
+                    I, <span class="blank-line"></span>, hereby agree to FLOORWORLD Terms and Conditions listed above
+                </div>
+
+                <table style="width:100%; border-collapse:collapse;">
+                    <tr>
+                        <td style="width:45%; vertical-align:top; padding-left:10px;">
+                            <table class="mytable">
+                                <tr>
+                                    <td class="label"><strong>Name</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="label"><strong>Signature</strong></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="width:55%; vertical-align:top; padding-right:10px;">
+                            <table class="mytable">
+                                <tr class="grand-total">
+                                    <td><strong>Title / Designation</strong></td>
+                                    <td><span class="blank-line"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Stamp</strong></td>
+                                    <td><span class="blank-line"></span></td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
