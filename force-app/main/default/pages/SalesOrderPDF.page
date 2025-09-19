@@ -346,6 +346,7 @@
                 </td>
                 
                 <td class="right">
+                    <div class="customer-row"><b>Lead Id:</b><span class="header-table-margin">{!order.Account.Lead_Number__c}</span></div>
                     <div class="customer-row"><b>Customer:</b><span class="header-table-margin">{!order.Account.Name}</span></div>
                     <div class="customer-row"><b>Contact Name:</b><span class="header-table-margin">{!order.Account.Name}</span></div>
                     <div class="customer-row"><b>Phone No.:</b><span class="header-table-margin">{!order.Account.Phone}</span></div>

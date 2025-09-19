@@ -27,7 +27,7 @@ public with sharing class SalesOrderPdfController {
                      Supply_Type__c, Shipping_Method__c, Account.ShippingState, Quote.Email, Branch__r.Branch_Phone__c, Balance_Due__c,
                      Owner.Name, Account.BillingStreet, Account.BillingCity, Account.ShippingCountry, Account.ShippingPostalCode, Total_Taxable_Amount__c,
                      Account.Name, Account.AccountNumber, Account.BillingState, Account.BillingPostalCode, Account.BillingCountry,
-                     Contact__r.Name, Contact__r.Phone, Contact__r.MobilePhone, Contact__r.Email, Branch__r.Branch_Address__c
+                     Contact__r.Name, Contact__r.Phone, Contact__r.MobilePhone, Contact__r.Email, Branch__r.Branch_Address__c, Account.Lead_Number__c
                      FROM Order 
                      WHERE Id = :orderId 
                      LIMIT 1];
