@@ -276,7 +276,7 @@ public with sharing class ZohoSignService {
     }
     
     private static Map<String, Object> buildSubmitRequestBody(DocumentCreationResponse docResponse, Integer pageCount, String recipientName, String recipientEmail) {
-        Map<String, Object> signatureField = new Map<String, Object>{
+        Map<String, Object> signatureFieldOtherCondition = new Map<String, Object>{
             'field_type_id' => SIGNATURE_FIELD_TYPE_ID,
             'field_type_name' => 'Signature',
             'action_id' => docResponse.actionId,
@@ -288,17 +288,37 @@ public with sharing class ZohoSignService {
             'is_resizable' => true,
             'abs_width' => 115,
             'abs_height' => 20,
-            'width' => '18.790850',
-            'height' => '2.525253',
-            'x_value' => '77.249884',
-            'y_value' => '94.289047',
+            'width' => '20.486986',
+            'height' => '2.553444',
+            'x_value' => '17.338372',
+            'y_value' => '84.076608',
+            'page_no' => pageCount - 3,
+            'document_id' => docResponse.documentId
+        };
+        
+        Map<String, Object> signatureFieldTermsAndConditions = new Map<String, Object>{
+            'field_type_id' => SIGNATURE_FIELD_TYPE_ID,
+            'field_type_name' => 'Signature',
+            'action_id' => docResponse.actionId,
+            'is_mandatory' => true,
+            'field_name' => 'Signature',
+            'field_label' => 'Signature',
+            'field_category' => 'image',
+            'is_draggable' => false,
+            'is_resizable' => true,
+            'abs_width' => 115,
+            'abs_height' => 20,
+            'width' => '20.486986',
+            'height' => '2.553444',
+            'x_value' => '17.087882',
+            'y_value' => '35.172211',
             'page_no' => pageCount,
             'document_id' => docResponse.documentId
         };
         
         Map<String, Object> action = new Map<String, Object>{
             'action_id' => docResponse.actionId,
-            'fields' => new List<Object>{ signatureField },
+            'fields' => new List<Object>{ signatureFieldOtherCondition, signatureFieldTermsAndConditions },
             'verify_recipient' => false,
             'action_type' => 'SIGN',
             'recipient_email' => recipientEmail,

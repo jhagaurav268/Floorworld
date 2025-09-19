@@ -20,7 +20,7 @@ public with sharing class QuotePdfController {
     private void loadQuoteData(String quoteId) {
         try {
             quote = [SELECT Id, Name, QuoteNumber, CreatedDate, ExpirationDate,
-                     Subtotal, Discount, Tax, TotalPrice, Email, Account.Phone,
+                     Subtotal, Discount, Tax, TotalPrice, Email, Account.Phone, Total_Taxable_Amount__c,
                      Account.ShippingAddress, Account.ShippingStreet, Account.ShippingCity,
                      Supply_Type__c, Shipping_Method__c, Account.ShippingState, Good_Available__c,
                      Owner.Name, Account.BillingStreet, Account.BillingCity, Account.ShippingCountry,
