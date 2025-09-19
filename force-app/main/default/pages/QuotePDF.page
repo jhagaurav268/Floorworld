@@ -389,7 +389,8 @@
                 </td>
                 
                 <td class="right">
-                    <div class="customer-row"><b>Customer:</b><span class="header-table-margin">{!quote.Account.AccountNumber} {!quote.Account.Name}</span></div>
+                    <div class="customer-row"><b>Lead Id:</b><span class="header-table-margin">{!quote.Account.Lead_Number__c}</span></div>
+                    <div class="customer-row"><b>Customer:</b><span class="header-table-margin">{!quote.Account.Name}</span></div>
                     <div class="customer-row"><b>Contact Name:</b><span class="header-table-margin">{!quote.Account.Name}</span></div>
                     <div class="customer-row"><b>Phone No.:</b><span class="header-table-margin">{!quote.Account.Phone}</span></div>
                     <div class="customer-row"><b>Mobile No.:</b><span class="header-table-margin">{!quote.Account.Phone}</span></div>
