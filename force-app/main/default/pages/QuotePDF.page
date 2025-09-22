@@ -502,7 +502,7 @@
                 <tbody>
                     <tr>
                         <td>Vat {!quote.VAT__c}%</td>
-                        <td>{!quote.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Total_Price__c}"/></apex:outputText></td>
+                        <td>{!quote.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Total_Taxable_Amount__c}"/></apex:outputText></td>
                         <td>{!quote.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!quote.Tax_Amount__c}"/></apex:outputText></td>
                     </tr>
                     <tr style="font-weight: bold;">
