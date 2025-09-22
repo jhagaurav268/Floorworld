@@ -1,7 +1,8 @@
 public with sharing class QuotePdfController {
     public Quote quote { get; set; }
     public List<QuoteLineItem> quoteLineItems { get; set; }
-    
+    public String amountInWords { get; set; }
+
     public QuotePdfController() {
         String quoteId = ApexPages.currentPage().getParameters().get('id');
         
@@ -43,6 +44,7 @@ public with sharing class QuotePdfController {
                                    OR Description LIKE '%Discount%'))
                               ORDER BY LineNumber ASC];
             
+            amountInWords = CurrencyToWords.amountToWords(quote.Grand_Total__c, quote.CurrencyIsoCode);
         } catch (Exception e) {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
                                                        'Error loading quote data: ' + e.getMessage()));

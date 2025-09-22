@@ -3,6 +3,7 @@ public with sharing class SalesOrderPdfController {
     public List<OrderItem> orderProducts { get; set; }
     public List<Payment__c> payments { get; set; }
     public transient String orderNumberPlain { get; set; }
+    public String amountInWords { get; set; }
 
     public SalesOrderPdfController() {
         String orderId = ApexPages.currentPage().getParameters().get('id');
@@ -49,6 +50,8 @@ public with sharing class SalesOrderPdfController {
                               Order By OrderItemNumber ASC];
             
             payments = [SELECT Id, Name, Amount__c, Order__c, Payment_Date__c FROM Payment__c Where Order__c =: orderId];
+
+            amountInWords = CurrencyToWords.amountToWords(order.Grand_Total__c, order.CurrencyIsoCode);
         } catch (Exception e) {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
                                                        'Error loading quote data: ' + e.getMessage()));

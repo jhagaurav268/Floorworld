@@ -500,7 +500,7 @@
         
         <div style="page-break-before: always;">
             <div class="bank-details">
-                <p><strong>Total in Words Dirhams:</strong> </p>
+                <p><strong>Total in Words:</strong>{!amountInWords}</p>
                 <p><strong>Bank:</strong> Emirates NBD</p>
                 <p><strong>Account No.:</strong> 1014436622301</p>
                 <p><strong>IBAN No.:</strong> AE960260001014436622301</p>

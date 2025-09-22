@@ -2,7 +2,8 @@ public with sharing class InvoicePdfController {
     public Order order { get; set; }
     public List<OrderItem> orderProducts { get; set; }
     public Proforma_Invoice__c proformaInvoice { get; set; }
-    
+    public String amountInWords { get; set; }
+
     public InvoicePdfController() {
         String invoiceId = ApexPages.currentPage().getParameters().get('id');
         
@@ -47,7 +48,7 @@ public with sharing class InvoicePdfController {
                                    OR Description LIKE '%Discount%'))
                               Order By OrderItemNumber ASC];
             
-            
+            amountInWords = CurrencyToWords.amountToWords(order.Grand_Total__c, order.CurrencyIsoCode);
         } catch (Exception e) {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
                                                        'Error loading invoice data: ' + e.getMessage()));
