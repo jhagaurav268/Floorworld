@@ -426,7 +426,7 @@
                         <td><apex:outputText value="{0,number,#,##0}"><apex:param value="{!item.Quantity}"/></apex:outputText></td>
                         <td><apex:outputText value="{0,number,#,##0.###}"><apex:param value="{!item.Quantity_SQM__c}"/></apex:outputText> SqM</td>
                         <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
-                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.Gross_Amount__c}"/></apex:outputText></td>
+                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.Discounted_Price__c}"/></apex:outputText></td>
                     </tr>
                     <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
                 </apex:repeat>

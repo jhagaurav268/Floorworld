@@ -384,7 +384,7 @@
                         <td><apex:outputText value="{0,number,#,##0}"><apex:param value="{!item.Quantity}"/></apex:outputText></td>
                         <td><apex:outputText value="{0,number,#,##0.###}"><apex:param value="{!item.Quantity_SQM__c}"/></apex:outputText> SqM</td>
                         <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
-                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.Gross_Amount__c}"/></apex:outputText></td>
+                        <td>{!item.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.Discounted_Price__c}"/></apex:outputText></td>
                     </tr>
                     <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
                 </apex:repeat>
@@ -438,13 +438,34 @@
         </div>
 
         <div>
-            <div class="section-title">Payment Details</div>
-
-            <apex:outputPanel rendered="{!payments.size > 0}">
+            <apex:outputPanel rendered="{!payments.size == 0}">
                 <table class="tax-summary-table">
                     <thead>
                         <tr>
-                            <th width="40%">Payment #</th>
+                            <th width="40%">Payment Name</th>
+                            <th width="30%">Payment Date</th>
+                            <th width="30%">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3" style="text-align: center; font-style: italic;">No payments recorded</td>
+                        </tr>
+                        <tr style="font-weight: bold; background-color: #e3e3e3;">
+                            <td colspan="2">Balance Due</td>
+                            <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Balance_Due__c}"/></apex:outputText></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </apex:outputPanel>
+
+            <apex:outputPanel rendered="{!payments.size > 0}">
+                 <div class="section-title">Payment Details</div>
+
+                <table class="tax-summary-table">
+                    <thead>
+                        <tr>
+                            <th width="40%">Payment Name</th>
                             <th width="30%">Payment Date</th>
                             <th width="30%">Amount</th>
                         </tr>
@@ -510,27 +531,6 @@
                     </tr>
                 </tbody>
             </table>
-
-            <apex:outputPanel rendered="{!payments.size == 0}">
-                <table class="tax-summary-table">
-                    <thead>
-                        <tr>
-                            <th width="40%">Payment Name</th>
-                            <th width="30%">Payment Date</th>
-                            <th width="30%">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="3" style="text-align: center; font-style: italic;">No payments recorded</td>
-                        </tr>
-                        <tr style="font-weight: bold; background-color: #e3e3e3;">
-                            <td colspan="2">Balance Due</td>
-                            <td>{!order.CurrencyIsoCode}&nbsp;<apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!order.Balance_Due__c}"/></apex:outputText></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </apex:outputPanel>
             
             <div style="border-bottom: 2px solid #e0e0e0; margin: 10px 0;"></div>
             

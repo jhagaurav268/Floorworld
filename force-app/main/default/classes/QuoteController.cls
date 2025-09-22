@@ -254,6 +254,41 @@ public class QuoteController {
             if (!quoteLineItemsToUpsert.isEmpty()) {
                 Database.upsert(quoteLineItemsToUpsert, true);
 
+                List<QuoteLineItem> discountUpdates = new List<QuoteLineItem>();
+
+                Map<Integer, Id> rowNumberToId = new Map<Integer, Id>();
+                for (QuoteLineItem qli : [
+                    SELECT Id, Row_Number__c, Description, Product2.Name 
+                    FROM QuoteLineItem 
+                    WHERE QuoteId = :quoteId
+                ]) {
+                    if (qli.Row_Number__c != null) {
+                        rowNumberToId.put((Integer)qli.Row_Number__c, qli.Id);
+                    }
+                }
+
+                for (QuoteLineItemWrapper item : lineItems) {
+                    if (item.isIndividualDiscount && item.rowNumber != null) {
+                        Integer parentRow = item.rowNumber - 1;
+                        if (rowNumberToId.containsKey(parentRow)) {
+                            Id parentId = rowNumberToId.get(parentRow);
+                            System.debug(parentId);
+                            System.debug(externalIdToSalesforceIdMap.get(item.rowId).Id);
+
+                            QuoteLineItem discountQli = new QuoteLineItem(
+                                Id = parentId,
+                                Discount__c = externalIdToSalesforceIdMap.get(item.rowId).Id
+                            );
+                            discountUpdates.add(discountQli);
+                        }
+                    }
+                }
+
+                if (!discountUpdates.isEmpty()) {
+                    update discountUpdates;
+                }
+
+
                 AggregateResult agg = [
                     SELECT SUM(Est_Gross_Profit_Percent__c) sumProfit,
                         COUNT(Id) cnt
