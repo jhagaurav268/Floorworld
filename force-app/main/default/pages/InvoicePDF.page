@@ -266,7 +266,7 @@
                 <tr>
                     <td style="width:55%; vertical-align:top; padding-right:10px;">
                         <table class="mytable">
-                            <tr><td class="label">Total in Words Dirhams</td><td class="value">{!amountInWords}</td></tr>
+                            <tr><td class="label">Total in Words</td><td class="value">{!amountInWords}</td></tr>
                             <tr><td class="label">Account Name</td><td class="value">Floorworld LLC</td></tr>
                             <tr><td class="label">Bank</td><td class="value">Emirates NBD</td></tr>
                             <tr><td class="label">IBAN</td><td class="value">AE960260001014436622301</td></tr>
